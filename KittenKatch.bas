@@ -8,10 +8,11 @@
      dim  player3Dir=c  
      dim  player4Dir=d
      dim  player0Timer=e     
-     dim  bonusFactor=f     
+     dim  scoreAmount=f
+     dim kittenMovement=g     
      dim  ballDir=h    
      dim timerlo=i
-     dim timerhi=j
+     dim roundOver=j
      dim sfxplaying=k
      dim sfxtimer=l
      dim boxed = m
@@ -20,9 +21,11 @@
      dim inBox=p
      dim  player1Timer=q
      dim  player2Timer=r
-     dim  player3Timer=s  
+     dim  player3Timer=v  
      dim  player4Timer=u
-     dim TextIndex = z    
+     dim gameOver = w
+     dim statusbarcolor = y
+     dim TextIndex = z  
      
    includesfile multisprite_bankswitch.inc
    set kernel multisprite
@@ -32,8 +35,7 @@
   rem Text Stuff
   const scorebkcolor = $C8
   const textbkcolor = $20
-  TextColor = $0F ; Set starting text color to white
-  rem const fontstyle = SQUISH
+  rem TextColor = $0F ; Set starting text color to white
   const t_Title = 0
   const t_P1 = 12
   const t_P2 = 24
@@ -70,17 +72,17 @@
   const _z4YMax = 83
 
   const _baseKittenSpeed = 8
+  const _timerRate = 10
 
  
   round = 1
+  gameOver = 0
+  timerlo=10
 
   rem Set values that need to be applied every round
   gosub setupRound
    
 main
-
-  timerlo=timerlo+1 
-  if timerlo=0 then timerhi=timerhi+1
 
    rem Set so there is a single verison of P0 and the missle0 is 2 px
    NUSIZ0=$10
@@ -92,6 +94,9 @@ main
   if switchreset then reboot
   
 pauseloop
+
+  if sfxplaying = 1 then sfxtimer = sfxtimer + 1
+  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0
 
   rem %%%%%%%%%%%%%%%%%%%
   rem COLOR TOWN!
@@ -108,8 +113,14 @@ pauseloop
   COLUBK=$C8
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
- 
-  if switchbw then drawscreen : AUDV0 = 0: goto pauseloop
+
+  if gameOver = 1 then COLUBK = $02 : COLUPF = $06
+
+  rem if roundOver = 1 then round = round + 1 : gosub setupRound
+
+  if switchbw || gameOver = 1 then drawscreen : AUDV0 = 0: goto pauseloop
+  
+  rem if roundOver > 1 then roundOver = roundOver - 1 : drawscreen : goto pauseloop
   
 
   pfheight=1
@@ -131,11 +142,12 @@ pauseloop
  ...............XX...............
  ...............XX...............
  ...............XX...............
+ ...............XX...............
  XXX............XX............XXX
  XXX............XX............XXX
  XXX............XX............XXX
  XXX............XX............XXX
- XXX............XX............XXX
+ ...............XX...............
  ...............XX...............
  ...............XX...............
  ...............XX...............
@@ -169,6 +181,19 @@ end
  %01000111
  %10000101
 end
+ 
+   lives = 0
+
+   lives:
+   %01000100
+   %11111110
+   %11111110
+   %01111100
+   %00111000
+   %00010000
+   %00010000
+   %00010000
+end
 
  drawscreen
   if player0x > 70 && player0x < 80 && player0y > 50 && player0y < 60 then inBox = 1 else inBox = 0
@@ -196,34 +221,25 @@ __skipPlayerInput
 
   if inBox = 1 && carrying > 0 then gosub scoreKitten
   
+  rem TRYING OUT PAUSES BETWEEN ROUNDS
+  rem if roundOver = 1 then goto pauseloop
   
   rem HERE IS THE TIMER
   t=t+1  
-  if t=60 then t=0 : bonusFactor = bonusFactor - 1
-  
+  if scoreAmount = 0 then gameOver = 1 : goto pauseloop
+  if t=_timerRate && scoreAmount > 0 then t=0 : scoreAmount = scoreAmount - 1
+  lifecolor = $04
+  statusbarlength = scoreAmount
 
   gosub updateKittens
 
   rem Keep the kittens from moving every single frame  
-  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = _baseKittenSpeed 
-  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = _baseKittenSpeed 
-  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = _baseKittenSpeed 
-  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = _baseKittenSpeed
+  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = kittenMovement
+  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = kittenMovement
+  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = kittenMovement
+  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
 
   if carrying > 0 then gosub carryKitten
-
-  rem if player2y=7 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if player3y=7 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if player4y=7 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if player5y=7 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if missile0y=5 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if missile1y=5 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  rem if bally=6 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
- 
-  rem gosub player5collision
-
-  if sfxplaying = 1 then sfxtimer = sfxtimer + 1
-  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0
   
   goto main
 
@@ -234,15 +250,21 @@ setupRound
   player0x=75
   player1x=120
   player2x=40
-  player3x=120
-  player4x=40
- 
   player0y=25
   player1y=65
   player2y=25
-  player3y=25
-  player4y=65
 
+  kittenMovement = _baseKittenSpeed
+
+  if round < 3 then player3x = 0 : player4x=0 : player3y = 0 : player4y =0 : goto _skipInitExtras
+  player3x=120
+  player4x=40 
+  player3y=25
+  player4y=55
+  rem after round 3 we start ramping up the speed of the kittens
+  temp1 = round - 2
+  if kittenMovement > temp1 then kittenMovement = kittenMovement - temp1 
+_skipInitExtras
 
   ballx=75
   bally=4
@@ -251,9 +273,7 @@ setupRound
   missile1x=75
   missile1y=6
 
-
-  timerlo=1
-  timerhi=0
+  roundOver=0
 
   sfxplaying=0
   sfxtimer=0
@@ -269,8 +289,9 @@ setupRound
   boxed = 0
 
   TextIndex = t_Title
-
-  bonusFactor = 100
+  rem temp1 = _timerRate
+  timerlo = timerlo + _timerRate
+  scoreAmount = 220 - timerlo
 
   player1Timer = 0
   player2Timer = 0
@@ -283,27 +304,24 @@ ballStunPlayer
   return
 
 scoreKitten
-  rem score = score + 1
-  temp1 = (rand&3) + 1
-  temp1 = temp1 * 100
-  temp1 = 100
-
-  if carrying = 1 then player1x = 80 : player1y = 55 : player1Timer = temp1 : boxed{1} = 1 : TextIndex = t_P1
-  if carrying = 2 then player2x = 80 : player2y = 55 : player2Timer = temp1 : boxed{2} = 1 : TextIndex = t_P2
-  if carrying = 3 then player3x = 80 : player3y = 55 : player3Timer = temp1 : boxed{3} = 1 : TextIndex = t_P3
-  if carrying = 4 then player4x = 80 : player4y = 55 : player4Timer = temp1 : boxed{4} = 1 : TextIndex = t_P4
-  rem player1Dir = (rand&3) + 1
-  rem player1Dir = player1Dir * 10
+  if carrying = 1 then player1x = 10 : player1y = 90 : player1Timer = temp1 : boxed{1} = 1 : TextIndex = t_P1
+  if carrying = 2 then player2x = 10 : player2y = 90 : player2Timer = temp1 : boxed{2} = 1 : TextIndex = t_P2
+  if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = temp1 : boxed{3} = 1 : TextIndex = t_P3
+  if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = temp1 : boxed{4} = 1 : TextIndex = t_P4
   carrying = 0
+
+  rem if on the first round then we set both round complete bools to true and skip the rest
   if round = 1 && boxed{1} then temp2 = 1: temp3 = 1 : goto __endRound
+  rem for all other rounds we have 2 or more kittens so test if we got both of them.
   if boxed{1} && boxed{2} then temp2 = 1
-  if round = 2 && temp2 then temp3 = 1 : goto __endRound
+  rem if we are on the second round then the above line was enough to end, so we set temp3 to true and skip to end
+  if round = 2 && temp2 = 1 then temp3 = 1 : goto __endRound
+  rem in further rounds we test if we boxed everyone
   if boxed{3} && boxed{4} then temp3 = 1
 __endRound
   sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  temp4 = bonusFactor * 10
-  dec temp5  = temp4 + $00
-  if temp2 = 1 && temp3 = 1 then score = score + temp5 : round = round + 1 :  goto setupRound
+  score = score + 10
+  if temp2 = 1 && temp3 = 1 then roundOver = 10 :round = round +1 : goto setupRound
   return
 
 carryKitten
@@ -332,8 +350,8 @@ grabKitten
 subGrab
     if player0x > 90 && player0y > 50 then carrying = 1
     if player0x > 90 && player0y < 50 then carrying = 3
-    if player0x < 75 && player0y < 50 then carrying = 2
-    if player0x < 75 && player0y > 50 then carrying = 4
+    if player0x < 70 && player0y < 50 then carrying = 2
+    if player0x < 60 && player0y > 50 then carrying = 4
     return
 
 updateKittens
@@ -352,7 +370,7 @@ __skipUpdate3
     if player4Timer > 0 || round < 3 then goto __skipUpdate4
     if carrying > 4 || carrying < 4 then gosub player4collision
 __skipUpdate4
-    if round > 2 then gosub ballcollision
+    if round > 4 then gosub ballcollision
     return
 
 player1collision
@@ -539,9 +557,6 @@ MoveBall
  missile0y = bally
 
  return
-   
-
-
 
 moveupandright 
  player1x = player1x + 1
@@ -670,19 +685,8 @@ movedownandleft8
  
  bank 2
 
-   data text_strings
-   __K, __I, __T, __T, __E, __N, _sp, __K, __A, __T, __C, __H
-   __B, __O, __X, __E, __D, _sp, __M, __I, __T, __T, __E, __N
-   __C, __A, __U, __G, __H, __T, _sp, __M, __O, __D, _ex, _sp
-   __N, __A, __B, __B, __E, __D, _sp, __T, __O, __T, __S, _ex
-   __S, __T, __O, __W, __E, __D, _sp, __P, __I, __P, _ex, _sp
-   __R, __O, __U, __N, __D, _sp, __D, __O, __N, __E, _ex, _sp
-   _sp, _sp, _sp, _sp, _sp, _sp, _sp, _sp, _sp, _sp, _sp, _sp
-end
+ inline 6lives_statusbar.asm
 
-  inline text12a.asm
-  inline text12b.asm
- 
      rem !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!THIS IS THE END OF THE PROGRAM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      rem ===============================================================================
      rem ===============================================================================
@@ -696,5 +700,3 @@ end
      rem ===============================================================================
      rem ===============================================================================
      rem ===============================================================================
-     
-  
