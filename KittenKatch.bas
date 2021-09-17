@@ -79,6 +79,10 @@
   gameOver = 0
   timerlo=10
 
+  sfxplaying=0
+  sfxtimer=0
+  AUDV0=0 
+
   rem Set values that need to be applied every round
   gosub setupRound
    
@@ -90,8 +94,6 @@ main
    _NUSIZ1=$10
 
    CTRLPF=$25
-
-  if switchreset then reboot
   
 pauseloop
 
@@ -117,6 +119,8 @@ pauseloop
   if gameOver = 1 then COLUBK = $02 : COLUPF = $06
 
   rem if roundOver = 1 then round = round + 1 : gosub setupRound
+
+  if switchreset then reboot
 
   if switchbw || gameOver = 1 then drawscreen : AUDV0 = 0: goto pauseloop
   
@@ -196,10 +200,10 @@ end
 end
 
  drawscreen
-  if player0x > 70 && player0x < 80 && player0y > 50 && player0y < 60 then inBox = 1 else inBox = 0
+  if player0x > 65 && player0x < 85 && player0y > 50 && player0y < 65 then inBox = 1 else inBox = 0
 
   rem if joy0fire then carrying = 1 else carrying = 0
-  if carrying > 0 && !joy0fire then carrying = 0
+  rem if carrying > 0 && !joy0fire then carrying = 0
  
   rem PLAYER0 COLLISIONS
   if collision(player0,player1) then AUDV0 = 0 : gosub grabKitten
@@ -263,21 +267,18 @@ setupRound
   player4y=55
   rem after round 3 we start ramping up the speed of the kittens
   temp1 = round - 2
-  if kittenMovement > temp1 then kittenMovement = kittenMovement - temp1 
+  if kittenMovement > temp1 then kittenMovement = kittenMovement - temp1 : goto _skipInitExtras
+  kittenMovement = 1
 _skipInitExtras
 
   ballx=75
-  bally=4
+  bally=88
   missile0x=75
   missile0y=5
   missile1x=75
   missile1y=6
 
   roundOver=0
-
-  sfxplaying=0
-  sfxtimer=0
-  AUDV0=0 
 
   player1Dir=10
   player2Dir=40
@@ -301,6 +302,8 @@ _skipInitExtras
 
 ballStunPlayer
   player0Timer = 50
+  sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
+
   return
 
 scoreKitten
