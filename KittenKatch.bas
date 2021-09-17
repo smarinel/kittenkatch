@@ -265,7 +265,8 @@ setupRound
   player4x=40 
   player3y=25
   player4y=55
-  rem after round 3 we start ramping up the speed of the kittens
+  rem after round 3 we start ramping up the speed of the kittens but only on advanced
+  if switchleftb || switchrightb then goto _skipInitExtras 
   temp1 = round - 2
   if kittenMovement > temp1 then kittenMovement = kittenMovement - temp1 : goto _skipInitExtras
   kittenMovement = 1
@@ -302,6 +303,7 @@ _skipInitExtras
 
 ballStunPlayer
   player0Timer = 50
+  if !switchleftb  || !switchrightb then score = score - 1
   sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
 
   return
@@ -324,8 +326,13 @@ scoreKitten
 __endRound
   sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
   score = score + 10
-  if temp2 = 1 && temp3 = 1 then roundOver = 10 :round = round +1 : goto setupRound
+  if temp2 = 1 && temp3 = 1 then roundOver = 10 :round = round +1 : goto roundScore
   return
+
+  rem when we finish a round, give the player 5 points for every "block" of 10 they had left on the timer.
+roundScore
+  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : goto roundScore
+  goto setupRound
 
 carryKitten
     if carrying > 1 || carrying = 0 then goto __skipCarry1 
@@ -373,7 +380,7 @@ __skipUpdate3
     if player4Timer > 0 || round < 3 then goto __skipUpdate4
     if carrying > 4 || carrying < 4 then gosub player4collision
 __skipUpdate4
-    if round > 4 then gosub ballcollision
+    if round > 3 then gosub ballcollision
     return
 
 player1collision
