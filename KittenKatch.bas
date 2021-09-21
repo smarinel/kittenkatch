@@ -21,6 +21,8 @@
      dim inBox=p
      dim  player1Timer=q
      dim  player2Timer=r
+     dim  topLimit=s
+     dim  botLimit=t
      dim  player3Timer=v  
      dim  player4Timer=u
      dim gameOver = w
@@ -53,7 +55,7 @@
   rem defining the bounds of the kitten zones
   const _z1XMin = 100
   const _z1XMax = 139
-  const _z1YMin = 50
+  const _z1YMin = 60
   const _z1YMax = 83
 
   const _z2XMin = 30
@@ -68,7 +70,7 @@
 
   const _z4XMin = 30
   const _z4XMax = 70
-  const _z4YMin = 50
+  const _z4YMin = 60
   const _z4YMax = 83
 
   const _baseKittenSpeed = 8
@@ -358,10 +360,21 @@ grabKitten
     return
 
 subGrab
+    if round = 1 then carrying = 1 : goto __endGrab
+    if round = 2 && player0y > 50 then carrying = 1 : goto __endGrab
+    if round = 2 && player0y < 50 then carrying = 2 : goto __endGrab
+
+    if player0y > 50 && boxed{1} then carrying = 4 : goto __endGrab
+    if player0y > 50 && boxed{4} then carrying = 1 : goto __endGrab
+
+    if player0y < 50 && boxed{3} then carrying = 2 : goto __endGrab
+    if player0y < 50 && boxed{2} then carrying = 3 : goto __endGrab
+
     if player0x > 90 && player0y > 50 then carrying = 1
     if player0x > 90 && player0y < 50 then carrying = 3
     if player0x < 70 && player0y < 50 then carrying = 2
     if player0x < 60 && player0y > 50 then carrying = 4
+__endGrab
     return
 
 updateKittens
@@ -391,6 +404,9 @@ player1collision
  %1000101
 end
 
+ botLimit = _z1XMin
+ if boxed{4} || round < 3 then botLimit = _z4XMin
+
  if player1Dir = 10 && player1y > _z1YMax then player1Dir=player1Dir+10
  if player1Dir = 10 && player1x > _z1XMax then player1Dir=player1Dir+30
 
@@ -398,10 +414,10 @@ end
  if player1Dir = 20 && player1y < _z1YMin then player1Dir=player1Dir-10
 
  if player1Dir = 30 && player1y < _z1YMin then player1Dir=player1Dir+10
- if player1Dir = 30 && player1x < _z1XMin then player1Dir=player1Dir-10
+ if player1Dir = 30 && player1x < botLimit then player1Dir=player1Dir-10
  
  if player1Dir = 40 && player1y > _z1YMax then player1Dir=player1Dir-10
- if player1Dir = 40 && player1x < _z1XMin then player1Dir=player1Dir-30
+ if player1Dir = 40 && player1x < botLimit then player1Dir=player1Dir-30
  
  if player1Dir < 10 then player1Dir=10
  if player1Dir > 40 then player1Dir=10
@@ -425,10 +441,13 @@ player2collision
  %1000101
 end
 
- if player2Dir = 10 && player2y > _z2YMax then player2Dir=player2Dir+10
- if player2Dir = 10 && player2x > _z2XMax then player2Dir=player2Dir+30
+ topLimit = _z2XMax
+ if boxed{3} || round = 2 then topLimit = _z3XMax
 
- if player2Dir = 20 && player2x > _z2XMax then player2Dir=player2Dir+10
+ if player2Dir = 10 && player2y > _z2YMax then player2Dir=player2Dir+10
+ if player2Dir = 10 && player2x > topLimit then player2Dir=player2Dir+30
+
+ if player2Dir = 20 && player2x > topLimit then player2Dir=player2Dir+10
  if player2Dir = 20 && player2y < _z2YMin then player2Dir=player2Dir-10
 
  if player2Dir = 30 && player2y < _z2YMin then player2Dir=player2Dir+10
@@ -460,6 +479,10 @@ player3collision
  %1000101
 end
 
+
+ botLimit = _z3XMin
+ if boxed{2} then botLimit = _z2XMin
+
  if player3Dir = 10 && player3y > _z3YMax then player3Dir=player3Dir+10
  if player3Dir = 10 && player3x > _z3XMax then player3Dir=player3Dir+30
 
@@ -467,10 +490,10 @@ end
  if player3Dir = 20 && player3y < _z3YMin then player3Dir=player3Dir-10
 
  if player3Dir = 30 && player3y < _z3YMin then player3Dir=player3Dir+10
- if player3Dir = 30 && player3x < _z3XMin then player3Dir=player3Dir-10
+ if player3Dir = 30 && player3x < botLimit then player3Dir=player3Dir-10
  
  if player3Dir = 40 && player3y > _z3YMax then player3Dir=player3Dir-10
- if player3Dir = 40 && player3x < _z3XMin then player3Dir=player3Dir-30
+ if player3Dir = 40 && player3x < botLimit then player3Dir=player3Dir-30
  
  if player3Dir < 10 then player3Dir=10
  if player3Dir > 40 then player3Dir=10
@@ -494,10 +517,13 @@ player4collision
  %1000101
 end
 
- if player4Dir = 10 && player4y > _z4YMax then player4Dir=player4Dir+10
- if player4Dir = 10 && player4x > _z4XMax then player4Dir=player4Dir+30
+ topLimit = _z4XMax
+ if boxed{1} then topLimit = _z1XMax
 
- if player4Dir = 20 && player4x > _z4XMax then player4Dir=player4Dir+10
+ if player4Dir = 10 && player4y > _z4YMax then player4Dir=player4Dir+10
+ if player4Dir = 10 && player4x > topLimit then player4Dir=player4Dir+30
+
+ if player4Dir = 20 && player4x > topLimit then player4Dir=player4Dir+10
  if player4Dir = 20 && player4y < _z4YMin then player4Dir=player4Dir-10
 
  if player4Dir = 30 && player4y < _z4YMin then player4Dir=player4Dir+10
