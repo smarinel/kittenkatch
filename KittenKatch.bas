@@ -22,7 +22,8 @@
      dim  player1Timer=q
      dim  player2Timer=r
      dim  topLimit=s
-     dim  botLimit=t
+     rem t is used for the timer
+     dim  botLimit=x
      dim  player3Timer=v  
      dim  player4Timer=u
      dim gameOver = w
@@ -120,14 +121,9 @@ pauseloop
 
   if gameOver = 1 then COLUBK = $02 : COLUPF = $06
 
-  rem if roundOver = 1 then round = round + 1 : gosub setupRound
-
   if switchreset then reboot
 
-  if switchbw || gameOver = 1 then drawscreen : AUDV0 = 0: goto pauseloop
-  
-  rem if roundOver > 1 then roundOver = roundOver - 1 : drawscreen : goto pauseloop
-  
+  if switchbw || gameOver = 1 then drawscreen : AUDV0 = 0: goto pauseloop 
 
   pfheight=1
  
@@ -333,7 +329,7 @@ __endRound
 
   rem when we finish a round, give the player 5 points for every "block" of 10 they had left on the timer.
 roundScore
-  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : goto roundScore
+  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : drawscreen : goto roundScore
   goto setupRound
 
 carryKitten
