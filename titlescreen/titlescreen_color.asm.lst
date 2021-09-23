@@ -1,0 +1,11 @@
+------- FILE titlescreen_color.asm LEVEL 1 PASS 2
+      1  0001 ????
+      2  0001 ????						; This is where the titlescreen background color gets set.
+      3  0001 ????						; You can also do a "dim titlescreencolor=[letter]" in bB
+      4  0001 ????						; if you want to change the color on the fly.
+      5  0001 ????
+      6  0001 ????				      ifnconst	titlescreencolor
+      7  0001 ????			   titlescreencolor
+      8  0001 ????				      endif
+      9  0001 ????	       01		      .byte.b	$01
+     10  0002 ????

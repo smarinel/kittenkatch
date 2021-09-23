@@ -28,7 +28,8 @@
      dim  player4Timer=u
      dim gameOver = w
      dim statusbarcolor = y
-     dim TextIndex = z  
+     dim titlescreencolor=z
+     rem dim TextIndex = z  
      
    includesfile multisprite_bankswitch.inc
    set kernel multisprite
@@ -46,6 +47,8 @@
   const t_P4 = 48
   const t_Round = 48
   const blank_text = 60
+
+  titlescreencolor = $C8
   
   rem zones - in a strange order because of creating separation
   rem ----------------------
@@ -85,6 +88,14 @@
   sfxplaying=0
   sfxtimer=0
   AUDV0=0 
+
+titlepage
+  gosub titledrawscreen bank2
+  if joy0fire || switchreset then goto gamestart
+  goto titlepage
+
+
+gamestart
 
   rem Set values that need to be applied every round
   gosub setupRound
@@ -288,7 +299,7 @@ _skipInitExtras
   carrying = 0
   boxed = 0
 
-  TextIndex = t_Title
+  rem TextIndex = t_Title
   rem temp1 = _timerRate
   timerlo = timerlo + _timerRate
   scoreAmount = 220 - timerlo
@@ -307,10 +318,10 @@ ballStunPlayer
   return
 
 scoreKitten
-  if carrying = 1 then player1x = 10 : player1y = 90 : player1Timer = temp1 : boxed{1} = 1 : TextIndex = t_P1
-  if carrying = 2 then player2x = 10 : player2y = 90 : player2Timer = temp1 : boxed{2} = 1 : TextIndex = t_P2
-  if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = temp1 : boxed{3} = 1 : TextIndex = t_P3
-  if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = temp1 : boxed{4} = 1 : TextIndex = t_P4
+  if carrying = 1 then player1x = 10 : player1y = 90 : player1Timer = temp1 : boxed{1} = 1 
+  if carrying = 2 then player2x = 10 : player2y = 90 : player2Timer = temp1 : boxed{2} = 1 
+  if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = temp1 : boxed{3} = 1 
+  if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = temp1 : boxed{4} = 1
   carrying = 0
 
   rem if on the first round then we set both round complete bools to true and skip the rest
@@ -719,6 +730,9 @@ movedownandleft8
 
  inline 6lives_statusbar.asm
 
+ asm
+ include "titlescreen/asm/titlescreen.asm"
+end
      rem !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!THIS IS THE END OF THE PROGRAM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      rem ===============================================================================
      rem ===============================================================================
