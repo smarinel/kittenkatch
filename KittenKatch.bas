@@ -48,7 +48,7 @@
   const t_Round = 48
   const blank_text = 60
 
-  titlescreencolor = $C8
+  titlescreencolor = $00
   
   rem zones - in a strange order because of creating separation
   rem ----------------------
