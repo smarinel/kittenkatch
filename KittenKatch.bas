@@ -12,7 +12,7 @@
      dim kittenMovement=g     
      dim  ballDir=h    
      dim timerlo=i
-     dim roundOver=j
+     dim ballSpeed=j
      dim sfxplaying=k
      dim sfxtimer=l
      dim boxed = m
@@ -26,7 +26,7 @@
      dim  botLimit=x
      dim  player3Timer=v  
      dim  player4Timer=u
-     dim gameOver = w
+     dim releaseCheck = w
      dim statusbarcolor = y
      dim titlescreencolor=z
      rem dim TextIndex = z  
@@ -78,12 +78,16 @@
   const _z4YMax = 83
 
   const _baseKittenSpeed = 8
+  const _middleKittenSpeed = 4
+  const _maxKittenSpeed = 1
   const _timerRate = 10
 
+  kittenMovement = _baseKittenSpeed
  
   round = 1
-  gameOver = 0
   timerlo=10
+
+  ballSpeed = 1
 
   sfxplaying=0
   sfxtimer=0
@@ -96,7 +100,7 @@ titlepage
 
 
 gamestart
-
+  lives = 32
   rem Set values that need to be applied every round
   gosub setupRound
    
@@ -130,11 +134,11 @@ pauseloop
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
 
-  if gameOver = 1 then COLUBK = $02 : COLUPF = $06
+  if round = 99 then COLUBK = $02 : COLUPF = $06
 
   if switchreset then reboot
 
-  if switchbw || gameOver = 1 then drawscreen : AUDV0 = 0: goto pauseloop 
+  if switchbw || round = 99 then drawscreen : AUDV0 = 0: goto pauseloop 
 
   pfheight=1
  
@@ -194,26 +198,24 @@ end
  %01000111
  %10000101
 end
- 
-   lives = 0
 
    lives:
-   %01000100
-   %11111110
-   %11111110
-   %01111100
-   %00111000
-   %00010000
-   %00010000
-   %00010000
+   %00111100
+   %01100110
+   %11100111
+   %11000011
+   %01111110
+   %00111100
+   %00000000
+   %00000000
 end
 
  drawscreen
+  rem test the player location to determine if they are in the box
   if player0x > 65 && player0x < 85 && player0y > 50 && player0y < 65 then inBox = 1 else inBox = 0
-
-  rem if joy0fire then carrying = 1 else carrying = 0
-  rem if carrying > 0 && !joy0fire then carrying = 0
  
+  if !joy0fire && releaseCheck then releaseCheck = 0 
+
   rem PLAYER0 COLLISIONS
   if collision(player0,player1) then AUDV0 = 0 : gosub grabKitten
   if collision(player0,ball) then AUDV0 = 0 : gosub ballStunPlayer
@@ -232,16 +234,11 @@ __skipPlayerInput
   if player0x = 133 then player0x = 132
   if player0x = 15 then player0x = 16
 
-  if inBox = 1 && carrying > 0 then gosub scoreKitten
-  
-  rem TRYING OUT PAUSES BETWEEN ROUNDS
-  rem if roundOver = 1 then goto pauseloop
-  
   rem HERE IS THE TIMER
   t=t+1  
-  if scoreAmount = 0 then gameOver = 1 : goto pauseloop
+  if scoreAmount = 0 then round = 99 : goto pauseloop
   if t=_timerRate && scoreAmount > 0 then t=0 : scoreAmount = scoreAmount - 1
-  lifecolor = $04
+  lifecolor = $00
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -253,7 +250,9 @@ __skipPlayerInput
   if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
 
   if carrying > 0 then gosub carryKitten
-  
+
+  if inBox = 1 && carrying > 0 then gosub scoreKitten
+
   goto main
 
 setupRound
@@ -267,18 +266,15 @@ setupRound
   player1y=65
   player2y=25
 
-  kittenMovement = _baseKittenSpeed
-
   if round < 3 then player3x = 0 : player4x=0 : player3y = 0 : player4y =0 : goto _skipInitExtras
   player3x=120
   player4x=40 
   player3y=25
   player4y=55
-  rem after round 3 we start ramping up the speed of the kittens but only on advanced
-  if switchleftb || switchrightb then goto _skipInitExtras 
-  temp1 = round - 2
-  if kittenMovement > temp1 then kittenMovement = kittenMovement - temp1 : goto _skipInitExtras
-  kittenMovement = 1
+  
+  if round = 7 then lives = lives + 32 : ballSpeed = 2 : goto _skipInitExtras
+  if round = 5 then lives = lives + 32 : kittenMovement = _maxKittenSpeed : goto _skipInitExtras
+  if round = 3 then lives = lives + 32 : kittenMovement = _middleKittenSpeed :goto _skipInitExtras
 _skipInitExtras
 
   ballx=75
@@ -287,8 +283,6 @@ _skipInitExtras
   missile0y=5
   missile1x=75
   missile1y=6
-
-  roundOver=0
 
   player1Dir=10
   player2Dir=40
@@ -299,29 +293,33 @@ _skipInitExtras
   carrying = 0
   boxed = 0
 
-  rem TextIndex = t_Title
-  rem temp1 = _timerRate
+  t = 0
+  AUDV0 = 0
+
   timerlo = timerlo + _timerRate
-  scoreAmount = 220 - timerlo
+  if timerlo < 220  then scoreAmount = 220 - timerlo : goto __protectScoreAmount
+  scoreAmount = 10
+__protectScoreAmount
 
   player1Timer = 0
-  player2Timer = 0
-  player3Timer = 0
-  player4Timer = 0
+  player2Timer = 2
+  player3Timer = 3
+  player4Timer = 4
   return
 
 ballStunPlayer
   player0Timer = 50
-  if !switchleftb  || !switchrightb then score = score - 1
+  rem if !switchleftb  || !switchrightb then score = score - 1
   sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
 
   return
 
 scoreKitten
-  if carrying = 1 then player1x = 10 : player1y = 90 : player1Timer = temp1 : boxed{1} = 1 
-  if carrying = 2 then player2x = 10 : player2y = 90 : player2Timer = temp1 : boxed{2} = 1 
-  if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = temp1 : boxed{3} = 1 
-  if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = temp1 : boxed{4} = 1
+  rem we set playerXTimer to 1 here so we don't tick it and it won't count down because that logic tests the boxed var
+  if carrying = 1 then player1x = 10 : player1y = 90 : player1Timer = 1 : boxed{1} = 1 
+  if carrying = 2 then player2x = 10 : player2y = 90 : player2Timer = 1 : boxed{2} = 1 
+  if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = 1 : boxed{3} = 1 
+  if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = 1 : boxed{4} = 1
   carrying = 0
 
   rem if on the first round then we set both round complete bools to true and skip the rest
@@ -335,13 +333,16 @@ scoreKitten
 __endRound
   sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
   score = score + 10
-  if temp2 = 1 && temp3 = 1 then roundOver = 10 :round = round +1 : goto roundScore
+  if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
   return
 
   rem when we finish a round, give the player 5 points for every "block" of 10 they had left on the timer.
 roundScore
-  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : drawscreen : goto roundScore
-  goto setupRound
+  t=t+1
+  if t < 4 then drawscreen : goto roundScore
+  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
+  gosub setupRound
+  return
 
 carryKitten
     if carrying > 1 || carrying = 0 then goto __skipCarry1 
@@ -363,7 +364,7 @@ __skipCarry4
     return 
 
 grabKitten
-    if joy0fire && carrying = 0 && inBox = 0 then gosub subGrab
+    if joy0fire && carrying = 0 && inBox = 0 && releaseCheck = 0 then releaseCheck = 1 : gosub subGrab
     return
 
 subGrab
@@ -704,26 +705,26 @@ movedownandleft4
  return
  
 moveupandright8 
- ballx = ballx + 1
- bally = bally + 1
+ ballx = ballx + ballSpeed
+ bally = bally + ballSpeed
  return
  
  
 moveupandleft8
- ballx = ballx - 1
- bally = bally + 1
+ ballx = ballx - ballSpeed
+ bally = bally + ballSpeed
  return
  
  
 movedownandright8
- ballx = ballx + 1
- bally = bally - 1
+ ballx = ballx + ballSpeed
+ bally = bally - ballSpeed
  return
  
  
 movedownandleft8
- ballx = ballx - 1
- bally = bally - 1
+ ballx = ballx - ballSpeed
+ bally = bally - ballSpeed
  return
  
  bank 2
