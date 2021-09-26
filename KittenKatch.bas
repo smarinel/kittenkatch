@@ -1,52 +1,44 @@
-	rem Miss It 11
+  rem Kitten Katch by Seth Marinello 2021
+  rem 
+  rem Started from the base of the following game to learn how to deal with the multi-sprite kernal and bank switching 	
+  rem Miss It 11
 	rem a new batari Basic game by accousticguitar
-     
   rem https://atariage.com/forums/topic/146120-a-new-game-miss-it-high-score-list-in-post-1/
-     
-     dim  player1Dir=a
-     dim  player2Dir=b
-     dim  player3Dir=c  
-     dim  player4Dir=d
-     dim  player0Timer=e     
-     dim  scoreAmount=f
-     dim kittenMovement=g     
-     dim  ballDir=h    
-     dim timerlo=i
-     dim ballSpeed=j
-     dim sfxplaying=k
-     dim sfxtimer=l
-     dim boxed = m
-     dim round = n
-     dim carrying=o
-     dim inBox=p
-     dim  player1Timer=q
-     dim  player2Timer=r
-     dim  topLimit=s
-     rem t is used for the timer
-     dim  botLimit=x
-     dim  player3Timer=v  
-     dim  player4Timer=u
-     dim releaseCheck = w
-     dim statusbarcolor = y
-     dim titlescreencolor=z
-     rem dim TextIndex = z  
-     
+
+
+   include div_mul.asm
    includesfile multisprite_bankswitch.inc
    set kernel multisprite
    set romsize 8k
 
+  dim  player1Dir=a
+  dim  player2Dir=b
+  dim  player3Dir=c  
+  dim  player4Dir=d
+  dim  player0Timer=e     
+  dim  scoreAmount=f
+  dim kittenMovement=g     
+  dim  ballDir=h    
+  dim timerlo=i
+  dim ballSpeed=j
+  dim sfxplaying=k
+  dim sfxtimer=l
+  dim boxed = m
+  dim round = n
+  dim carrying=o
+  rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
+  dim inBox=p
+  dim  player1Timer=q
+  dim  player2Timer=r
+  dim  topLimit=s
+  rem t is used for the timer
+  dim  botLimit=x
+  dim  player3Timer=v  
+  dim  player4Timer=u
+  dim ballTimer = w
+  dim statusbarcolor = y
+  dim titlescreencolor=z
 
-  rem Text Stuff
-  const scorebkcolor = $C8
-  const textbkcolor = $20
-  rem TextColor = $0F ; Set starting text color to white
-  const t_Title = 0
-  const t_P1 = 12
-  const t_P2 = 24
-  const t_P3 = 36
-  const t_P4 = 48
-  const t_Round = 48
-  const blank_text = 60
 
   titlescreencolor = $00
   
@@ -82,12 +74,14 @@
   const _maxKittenSpeed = 1
   const _timerRate = 10
 
+  const _baseTime = 180
+
   kittenMovement = _baseKittenSpeed
  
   round = 1
   timerlo=10
 
-  ballSpeed = 1
+  ballSpeed = 2
 
   sfxplaying=0
   sfxtimer=0
@@ -100,10 +94,9 @@ titlepage
 
 
 gamestart
-  lives = 32
   rem Set values that need to be applied every round
   gosub setupRound
-   
+  lives = 0   
 main
 
    rem Set so there is a single verison of P0 and the missle0 is 2 px
@@ -212,15 +205,15 @@ end
 
  drawscreen
   rem test the player location to determine if they are in the box
-  if player0x > 65 && player0x < 85 && player0y > 50 && player0y < 65 then inBox = 1 else inBox = 0
+  if player0x > 65 && player0x < 85 && player0y > 50 && player0y < 65 then inBox{1} = 1 else inBox{1} = 0
  
-  if !joy0fire && releaseCheck then releaseCheck = 0 
+  if !joy0fire && inBox{2} then inBox{2} = 0 
 
   rem PLAYER0 COLLISIONS
-  if collision(player0,player1) then AUDV0 = 0 : gosub grabKitten
-  if collision(player0,ball) then AUDV0 = 0 : gosub ballStunPlayer
-  rem if collision(player0,missile0) then AUDV0 = 0 : goto main
-  rem if collision(player0,missile1) then AUDV0 = 0 : goto main
+  if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
+
+  rem if we hit the player and we aren't already stunned 
+  if collision(player0,ball) && player0Timer = 0 then AUDV0 = 0 : gosub ballStunPlayer
 
   if player0Timer > 0 then player0Timer = player0Timer - 1 : goto __skipPlayerInput   
   if joy0right then player0x=player0x+1 : REFP0 = 0
@@ -238,7 +231,8 @@ __skipPlayerInput
   t=t+1  
   if scoreAmount = 0 then round = 99 : goto pauseloop
   if t=_timerRate && scoreAmount > 0 then t=0 : scoreAmount = scoreAmount - 1
-  lifecolor = $00
+  rem if round < 7 then lifecolor = $00
+  statusbarcolor = $00
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -248,10 +242,27 @@ __skipPlayerInput
   if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = kittenMovement
   if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = kittenMovement
   if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
+  if ballTimer > 0 then ballTimer = ballTimer - 1 else ballTimer = _maxKittenSpeed
 
-  if carrying > 0 then gosub carryKitten
+  rem putting the carry logic to avoid a gosub here. 
+  if carrying > 1 || carrying = 0 then goto __skipCarry1 
+    player1x = player0x + 10
+    player1y = player0y - 4
+__skipCarry1
+   if carrying > 2 || carrying < 2 then goto __skipCarry2 
+    player2x = player0x + 10
+    player2y = player0y - 4
+__skipCarry2
+  if carrying > 3 || carrying < 3 then goto __skipCarry3 
+    player3x = player0x + 10
+    player3y = player0y - 4
+__skipCarry3
+  if carrying > 4 || carrying < 4 then goto __skipCarry4 
+    player4x = player0x + 10
+    player4y = player0y - 4
+__skipCarry4
 
-  if inBox = 1 && carrying > 0 then gosub scoreKitten
+  if inBox{1} && carrying > 0 then gosub scoreKitten
 
   goto main
 
@@ -265,16 +276,32 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
+ 
+  rem we use lives to show what round we are on up to 6, then we loop  
+  rem lives = lives + 32
+  rem if lives > 223 then lives = lives + 32
+  
+  
+  rem RAMP - the whole time we get less on the clock each round
+  rem round 1 = 1 kitten
+  rem round 2 = 2 kittens
+  rem round 3 = 4 kittens
+  rem round 4 = 4 kittens, ball
+  rem round 5 = 4 kittens medium, 
+  rem round 6 = repeat 5 with less time
+  rem round 7 = 4 kittens fast, ball
+  rem round 8 = repeat 7 with less time
+  rem round 9 = 4 kittens fast, ball fast
 
   if round < 3 then player3x = 0 : player4x=0 : player3y = 0 : player4y =0 : goto _skipInitExtras
   player3x=120
   player4x=40 
   player3y=25
   player4y=55
-  
-  if round = 7 then lives = lives + 32 : ballSpeed = 2 : goto _skipInitExtras
-  if round = 5 then lives = lives + 32 : kittenMovement = _maxKittenSpeed : goto _skipInitExtras
-  if round = 3 then lives = lives + 32 : kittenMovement = _middleKittenSpeed :goto _skipInitExtras
+
+  if round = 9 then ballSpeed = 3 : goto _skipInitExtras
+  if round = 7 then kittenMovement = _maxKittenSpeed : goto _skipInitExtras
+  if round = 5 then kittenMovement = _middleKittenSpeed :goto _skipInitExtras
 _skipInitExtras
 
   ballx=75
@@ -296,8 +323,11 @@ _skipInitExtras
   t = 0
   AUDV0 = 0
 
+  rem using temp5 here to store the amount we want to lower the overall time limit. 
+  rem temp5 = _timerRate
+  rem temp5 = temp5 * ballSpeed
   timerlo = timerlo + _timerRate
-  if timerlo < 220  then scoreAmount = 220 - timerlo : goto __protectScoreAmount
+  if timerlo < _baseTime  then scoreAmount = _baseTime - timerlo : goto __protectScoreAmount
   scoreAmount = 10
 __protectScoreAmount
 
@@ -305,11 +335,12 @@ __protectScoreAmount
   player2Timer = 2
   player3Timer = 3
   player4Timer = 4
+  ballTimer = 5
   return
 
 ballStunPlayer
   player0Timer = 50
-  rem if !switchleftb  || !switchrightb then score = score - 1
+  score = score - 1
   sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
 
   return
@@ -343,29 +374,6 @@ roundScore
   if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
   gosub setupRound
   return
-
-carryKitten
-    if carrying > 1 || carrying = 0 then goto __skipCarry1 
-    player1x = player0x + 10
-    player1y = player0y - 4
-__skipCarry1
-   if carrying > 2 || carrying < 2 then goto __skipCarry2 
-    player2x = player0x + 10
-    player2y = player0y - 4
-__skipCarry2
-  if carrying > 3 || carrying < 3 then goto __skipCarry3 
-    player3x = player0x + 10
-    player3y = player0y - 4
-__skipCarry3
-  if carrying > 4 || carrying < 4 then goto __skipCarry4 
-    player4x = player0x + 10
-    player4y = player0y - 4
-__skipCarry4
-    return 
-
-grabKitten
-    if joy0fire && carrying = 0 && inBox = 0 && releaseCheck = 0 then releaseCheck = 1 : gosub subGrab
-    return
 
 subGrab
     if round = 1 then carrying = 1 : goto __endGrab
@@ -401,7 +409,8 @@ __skipUpdate3
     if player4Timer > 0 || round < 3 then goto __skipUpdate4
     if carrying > 4 || carrying < 4 then gosub player4collision
 __skipUpdate4
-    if round > 3 then gosub ballcollision
+
+    if ballTimer = 0 && round > 3 then gosub ballcollision
     return
 
 player1collision
