@@ -74,7 +74,7 @@
   const _maxKittenSpeed = 1
   const _timerRate = 10
 
-  const _baseTime = 180
+  const _baseTime = 200
 
   kittenMovement = _baseKittenSpeed
  
@@ -86,10 +86,25 @@
   sfxplaying=0
   sfxtimer=0
   AUDV0=0 
-
+ 
+  rem this sets if we start off with kitten 1 or 2
+  if rand&1 = 1 then inBox{3} = 1 else inBox{3} = 0
 titlepage
   gosub titledrawscreen bank2
-  if joy0fire || switchreset then goto gamestart
+
+  rem I know this looks crazy, but it was the only way I could get some sort of title song playing. 
+  rem using ballTimer here since it gets cleanly setup with good values in the setupRound routine.
+  if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 1 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 16 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 2 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 31 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
+  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0
+  if sfxplaying = 1 then sfxtimer = sfxtimer + 1
+  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : AUDV1=0: ballTimer = ballTimer + 1
+  
+  if joy0fire || switchreset then sfxtimer = 0 : sfxplaying = 0: AUDV0 = 0 : goto gamestart
   goto titlepage
 
 
@@ -115,7 +130,7 @@ pauseloop
   rem COLOR TOWN!
   rem %%%%%%%%%%%%%%%%%%%
   rem player color changes when carrying a kitten
-  if carrying = 0 then COLUP0= 0 else COLUP0= $04 
+  if carrying = 0 then COLUP0= $00 else COLUP0= $04 
 
   rem in multisprite kernel we use this to change the color of player 1
   _COLUP1=$1E
@@ -127,11 +142,9 @@ pauseloop
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
 
-  if round = 99 then COLUBK = $02 : COLUPF = $06
-
   if switchreset then reboot
 
-  if switchbw || round = 99 then drawscreen : AUDV0 = 0: goto pauseloop 
+  if switchbw || round = 99 then COLUBK = $02 : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
 
   pfheight=1
  
@@ -209,10 +222,10 @@ end
  
   if !joy0fire && inBox{2} then inBox{2} = 0 
 
-  rem PLAYER0 COLLISIONS
+  rem Hitting Kittens
   if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
 
-  rem if we hit the player and we aren't already stunned 
+  rem if we hit the player with a ball and we aren't already stunned 
   if collision(player0,ball) && player0Timer = 0 then AUDV0 = 0 : gosub ballStunPlayer
 
   if player0Timer > 0 then player0Timer = player0Timer - 1 : goto __skipPlayerInput   
@@ -221,11 +234,6 @@ end
   if joy0up then player0y=player0y+1
   if joy0down then player0y=player0y-1  
 __skipPlayerInput
-
-  if player0y = 88 then player0y = 87
-  if player0y = 12 then player0y = 13
-  if player0x = 133 then player0x = 132
-  if player0x = 15 then player0x = 16
 
   rem HERE IS THE TIMER
   t=t+1  
@@ -237,12 +245,7 @@ __skipPlayerInput
 
   gosub updateKittens
 
-  rem Keep the kittens from moving every single frame  
-  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = kittenMovement
-  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = kittenMovement
-  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = kittenMovement
-  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
-  if ballTimer > 0 then ballTimer = ballTimer - 1 else ballTimer = _maxKittenSpeed
+  rem the timer updates and player bounds limits have been moved to the vblank section in BANK2 to save some cycles
 
   rem putting the carry logic to avoid a gosub here. 
   if carrying > 1 || carrying = 0 then goto __skipCarry1 
@@ -354,7 +357,7 @@ scoreKitten
   carrying = 0
 
   rem if on the first round then we set both round complete bools to true and skip the rest
-  if round = 1 && boxed{1} then temp2 = 1: temp3 = 1 : goto __endRound
+  if round = 1 then temp2 = 1: temp3 = 1 : goto __endRound
   rem for all other rounds we have 2 or more kittens so test if we got both of them.
   if boxed{1} && boxed{2} then temp2 = 1
   rem if we are on the second round then the above line was enough to end, so we set temp3 to true and skip to end
@@ -376,7 +379,9 @@ roundScore
   return
 
 subGrab
-    if round = 1 then carrying = 1 : goto __endGrab
+    if round = 1 && !inBox{3} then carrying = 1 : goto __endGrab
+    if round = 1 && inBox{3} then carrying = 2 : goto __endGrab
+
     if round = 2 && player0y > 50 then carrying = 1 : goto __endGrab
     if round = 2 && player0y < 50 then carrying = 2 : goto __endGrab
 
@@ -394,11 +399,16 @@ __endGrab
     return
 
 updateKittens
-    if player1Timer > 0 then goto __skipUpdate1
+    rem this is nonsense, but we are using temp5 to determine if we are using k1 or k2 as our starting kitten
+    temp5 = 3
+    if round = 1 && inBox{3} then temp5 = 1
+    if round = 1 && !inBox{3} then temp5 = 0
+
+    if player1Timer > 0 || temp5 = 1 then goto __skipUpdate1
     if carrying > 1 || carrying = 0 then gosub player1collision
 __skipUpdate1
 
-    if player2Timer > 0 || round < 2 then goto __skipUpdate2
+    if player2Timer > 0 || temp5 = 0 then goto __skipUpdate2
     if carrying > 2 || carrying < 2 then gosub player2collision
 __skipUpdate2
 
@@ -737,6 +747,21 @@ movedownandleft8
  return
  
  bank 2
+  
+  rem moving some logic into the vblank time because there is a small amount of it leftover and we need all we can get
+  vblank
+  if player0y = 88 then player0y = 87
+  if player0y = 13 then player0y = 14
+  if player0x = 133 then player0x = 132
+  if player0x = 19 then player0x = 20 
+  
+  rem Keep the kittens from moving every single frame  
+  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = kittenMovement
+  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = kittenMovement
+  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = kittenMovement
+  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
+  if ballTimer > 0 then ballTimer = ballTimer - 1 else ballTimer = _maxKittenSpeed
+  return 
 
  inline 6lives_statusbar.asm
 

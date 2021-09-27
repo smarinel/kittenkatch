@@ -16,22 +16,27 @@ bmp_48x2_1_height = 50
 
  ;*** The color of each line in the bitmap, in reverse order...
 bmp_48x2_1_colors 
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
-   .byte $F2
+   .byte $36
+   .byte $44
+   .byte $6A
+   .byte $36
+   .byte $8A
+   .byte $36
+   .byte $8A
+   .byte $44
+   .byte $36
+   .byte $8A
+   .byte $36
+   .byte $2A
+   .byte $36
+   .byte $6A
+   .byte $5A
+   .byte $36
+   .byte $06
+   .byte $06
+   .byte $04
+   .byte $04
+   .byte $06
    .byte $04
    .byte $04
    .byte $04
@@ -47,23 +52,18 @@ bmp_48x2_1_colors
    .byte $04
    .byte $04
    .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
+   .byte $06
    .byte $F2
    .byte $C8
-   .byte $C2
-   .byte $C2
-   .byte $C2
+   .byte $C8
+   .byte $C6
+   .byte $C4
    .byte $C2
    .byte $C2
    .byte $C8
-   .byte $C2
-   .byte $C2
-   .byte $C2
+   .byte $C8
+   .byte $C6
+   .byte $C4
    .byte $C2
    .byte $0E
 
@@ -334,16 +334,16 @@ bmp_48x2_1_04
 	BYTE %11000110
 	BYTE %11001110
 	BYTE %10001100
-	BYTE %11111100
-	BYTE %11111100
-	BYTE %11111100
+	BYTE %11111110
 	BYTE %11111110
 	BYTE %11111111
-	BYTE %00000101
-	BYTE %00001110
-	BYTE %00001011
+	BYTE %11111111
+	BYTE %11111111
+	BYTE %00001101
+	BYTE %00011110
+	BYTE %00011011
 	BYTE %00001111
-	BYTE %00001110
+	BYTE %00001010
 	BYTE %00001100
 	BYTE %00000000
 	BYTE %00000000
@@ -398,12 +398,12 @@ bmp_48x2_1_05
 	BYTE %00000000
 	BYTE %00000000
 	BYTE %00000000
-	BYTE %10000000
-	BYTE %01000000
+	BYTE %11000000
+	BYTE %01100000
+	BYTE %11110000
+	BYTE %10110000
 	BYTE %11100000
 	BYTE %10100000
-	BYTE %11100000
-	BYTE %11100000
 	BYTE %11000000
 	BYTE %00000000
 	BYTE %00000000
