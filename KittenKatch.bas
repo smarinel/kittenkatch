@@ -102,7 +102,7 @@ titlepage
   if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
   if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
-  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : AUDV1=0: ballTimer = ballTimer + 1
+  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1
   
   if joy0fire || switchreset then sfxtimer = 0 : sfxplaying = 0: AUDV0 = 0 : goto gamestart
   goto titlepage
@@ -206,13 +206,13 @@ end
 end
 
    lives:
-   %00111100
-   %01100110
-   %11100111
+   %11111111
    %11000011
-   %01111110
-   %00111100
-   %00000000
+   %11011011
+   %11000011
+   %11011011
+   %11000011
+   %11011111
    %00000000
 end
 
@@ -295,6 +295,7 @@ setupRound
   rem round 7 = 4 kittens fast, ball
   rem round 8 = repeat 7 with less time
   rem round 9 = 4 kittens fast, ball fast
+  rem round 10 = same as 9 but you start getting a bonus 10 for each cat since the time will be really short
 
   if round < 3 then player3x = 0 : player4x=0 : player3y = 0 : player4y =0 : goto _skipInitExtras
   player3x=120
@@ -302,7 +303,7 @@ setupRound
   player3y=25
   player4y=55
 
-  if round = 9 then ballSpeed = 3 : goto _skipInitExtras
+  if round = 9 then lives = lives + 32 : ballSpeed = 3 : goto _skipInitExtras
   if round = 7 then kittenMovement = _maxKittenSpeed : goto _skipInitExtras
   if round = 5 then kittenMovement = _middleKittenSpeed :goto _skipInitExtras
 _skipInitExtras
@@ -366,7 +367,8 @@ scoreKitten
   if boxed{3} && boxed{4} then temp3 = 1
 __endRound
   sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
-  score = score + 10
+  score = score + 15
+  if round > 9 then score = score + 10
   if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
   return
 
