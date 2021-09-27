@@ -1,5 +1,8 @@
 Kitten Katch 
 
+An Atari 2600 (NTSC) game by Seth Marinello
+2021
+
 Kittens on the loose! Your young kittens have all escaped their box and you must catch them before the cause a mess. Each round they will scurry around the yard, trying to avoid capture. In later stages one of them will release a ball of yard that will bounce around and tangle you up if it hits you!
 
 
@@ -19,6 +22,6 @@ Scoring:
 * Getting hit by the ball of yarn doesn’t just cost you time, but also costs you a point. 
 * After surviving 9 rounds of Kitten Katch a bonus 10 points will be applied for each kitten you rescue.
 
-
+Kittens:
 
 Cos - Mod - Bongo - Silver
