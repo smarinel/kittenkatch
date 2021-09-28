@@ -4,7 +4,7 @@
  ; if you want to change the color on the fly.
 
  ifnconst titlescreencolor
-titlescreencolor
+titlescreencolor=$00
  endif
  .byte $00
 

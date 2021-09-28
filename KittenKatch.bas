@@ -37,10 +37,10 @@
   dim  player4Timer=u
   dim ballTimer = w
   dim statusbarcolor = y
-  dim titlescreencolor=z
+  dim bmp_48x2_2_index=z
 
 
-  titlescreencolor = $00
+  rem titlescreencolor = $00
   
   rem zones - in a strange order because of creating separation
   rem ----------------------
@@ -89,9 +89,11 @@
  
   rem this sets if we start off with kitten 1 or 2
   if rand&1 = 1 then inBox{3} = 1 else inBox{3} = 0
+  
+  bmp_48x2_2_index=64
 titlepage
   gosub titledrawscreen bank2
-
+  
   rem I know this looks crazy, but it was the only way I could get some sort of title song playing. 
   rem using ballTimer here since it gets cleanly setup with good values in the setupRound routine.
   if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 
@@ -100,7 +102,8 @@ titlepage
   if sfxplaying = 0 && ballTimer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
   if sfxplaying = 0 && ballTimer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 
   if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0
+  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16
+  if bmp_48x2_2_index = 80 then bmp_48x2_2_index = 0
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
   if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1
   
@@ -165,7 +168,7 @@ pauseloop
  ...............XX...............
  ...............XX...............
  ...............XX...............
- ...............XX...............
+ ..X............XX............X..
  XXX............XX............XXX
  XXX............XX............XXX
  XXX............XX............XXX
@@ -240,7 +243,7 @@ __skipPlayerInput
   if scoreAmount = 0 then round = 99 : goto pauseloop
   if t=_timerRate && scoreAmount > 0 then t=0 : scoreAmount = scoreAmount - 1
   rem if round < 7 then lifecolor = $00
-  statusbarcolor = $00
+  rem statusbarcolor = $00
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -498,7 +501,7 @@ MovePlayer2
 
 player3collision
 
-  COLUP3=128
+  COLUP3=$0E
   NUSIZ3=$10   
    
  player3:

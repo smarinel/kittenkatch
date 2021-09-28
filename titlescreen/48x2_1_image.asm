@@ -53,18 +53,18 @@ bmp_48x2_1_colors
    .byte $04
    .byte $04
    .byte $06
-   .byte $F2
-   .byte $C8
-   .byte $C8
-   .byte $C6
-   .byte $C4
+   .byte $78
+   .byte $78
+   .byte $78
+   .byte $7A
+   .byte $7C
+   .byte $7E
    .byte $C2
-   .byte $C2
-   .byte $C8
-   .byte $C8
-   .byte $C6
-   .byte $C4
-   .byte $C2
+   .byte $66
+   .byte $68
+   .byte $6A
+   .byte $6C
+   .byte $6E
    .byte $0E
 
 
