@@ -17,30 +17,27 @@
   dim  player4Dir=d
   dim  player0Timer=e     
   dim  scoreAmount=f
-  dim kittenMovement=g     
+  dim  kittenMovement=g     
   dim  ballDir=h    
-  dim timerlo=i
-  dim ballSpeed=j
-  dim sfxplaying=k
-  dim sfxtimer=l
-  dim boxed = m
-  dim round = n
-  dim carrying=o
+  dim  timerlo=i
+  dim  ballSpeed=j
+  dim  sfxplaying=k
+  dim  sfxtimer=l
+  dim  boxed = m
+  dim  round = n
+  dim  carrying=o
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
-  dim inBox=p
+  dim  inBox=p
   dim  player1Timer=q
   dim  player2Timer=r
   dim  topLimit=s
-  rem t is used for the timer
+  dim  timer = t
   dim  botLimit=x
   dim  player3Timer=v  
   dim  player4Timer=u
-  dim ballTimer = w
-  dim statusbarcolor = y
-  dim bmp_48x2_2_index=z
-
-
-  rem titlescreencolor = $00
+  dim  ballTimer = w
+  dim  statusbarcolor = y
+  dim  bmp_48x2_2_index=z
   
   rem zones - in a strange order because of creating separation
   rem ----------------------
@@ -76,6 +73,11 @@
 
   const _baseTime = 200
 
+  const NE = 10
+  const SE = 20
+  const SW = 30
+  const NW = 40
+
   kittenMovement = _baseKittenSpeed
  
   round = 1
@@ -91,6 +93,7 @@
   if rand&1 = 1 then inBox{3} = 1 else inBox{3} = 0
   
   bmp_48x2_2_index=64
+
 titlepage
   gosub titledrawscreen bank2
   
@@ -154,7 +157,7 @@ pauseloop
   playfield:
  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
- ...............XX...............
+ X..XX..XX..XX..XX..XX..XX..XX..X
  ...............XX...............
  ...............XX...............
  ...............XX...............
@@ -196,7 +199,7 @@ pauseloop
  ...............XX...............
  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ X..XX..XX..XX..XX..XX..XX..XX..X
 end
 
  player0:
@@ -238,10 +241,9 @@ end
   if joy0down then player0y=player0y-1  
 __skipPlayerInput
 
-  rem HERE IS THE TIMER
-  t=t+1  
+  timer = timer + 1  
   if scoreAmount = 0 then round = 99 : goto pauseloop
-  if t=_timerRate && scoreAmount > 0 then t=0 : scoreAmount = scoreAmount - 1
+  if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1
   rem if round < 7 then lifecolor = $00
   rem statusbarcolor = $00
   statusbarlength = scoreAmount
@@ -318,21 +320,18 @@ _skipInitExtras
   missile1x=75
   missile1y=6
 
-  player1Dir=10
-  player2Dir=40
-  player3Dir=30
-  player4Dir=10
-  ballDir=10
+  player1Dir=NE
+  player2Dir=NW
+  player3Dir=SW
+  player4Dir=NE
+  ballDir=SE
 
   carrying = 0
   boxed = 0
 
-  t = 0
+  timer = 0
   AUDV0 = 0
 
-  rem using temp5 here to store the amount we want to lower the overall time limit. 
-  rem temp5 = _timerRate
-  rem temp5 = temp5 * ballSpeed
   timerlo = timerlo + _timerRate
   if timerlo < _baseTime  then scoreAmount = _baseTime - timerlo : goto __protectScoreAmount
   scoreAmount = 10
@@ -349,7 +348,6 @@ ballStunPlayer
   player0Timer = 50
   score = score - 1
   sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
-
   return
 
 scoreKitten
@@ -410,25 +408,25 @@ updateKittens
     if round = 1 && !inBox{3} then temp5 = 0
 
     if player1Timer > 0 || temp5 = 1 then goto __skipUpdate1
-    if carrying > 1 || carrying = 0 then gosub player1collision
+    if carrying > 1 || carrying = 0 then gosub player1_limitcheck
 __skipUpdate1
 
     if player2Timer > 0 || temp5 = 0 then goto __skipUpdate2
-    if carrying > 2 || carrying < 2 then gosub player2collision
+    if carrying > 2 || carrying < 2 then gosub player2_limitcheck
 __skipUpdate2
 
     if player3Timer > 0 || round < 3 then goto __skipUpdate3
-    if carrying > 3 || carrying < 3 then gosub player3collision
+    if carrying > 3 || carrying < 3 then gosub player3_limitcheck
 __skipUpdate3
 
     if player4Timer > 0 || round < 3 then goto __skipUpdate4
-    if carrying > 4 || carrying < 4 then gosub player4collision
+    if carrying > 4 || carrying < 4 then gosub player4_limitcheck
 __skipUpdate4
 
-    if ballTimer = 0 && round > 3 then gosub ballcollision
+    if ballTimer = 0 && round > 3 then gosub ball_limitcheck
     return
 
-player1collision
+player1_limitcheck
  player1:
  %0011010
  %0101110
@@ -439,29 +437,33 @@ end
  botLimit = _z1XMin
  if boxed{4} || round < 3 then botLimit = _z4XMin
 
- if player1Dir = 10 && player1y > _z1YMax then player1Dir=player1Dir+10
- if player1Dir = 10 && player1x > _z1XMax then player1Dir=player1Dir+30
+ if player1Dir = NE && player1y > _z1YMax then player1Dir=player1Dir+10
+ if player1Dir = NE && player1x > _z1XMax then player1Dir=player1Dir+30
 
- if player1Dir = 20 && player1x > _z1XMax then player1Dir=player1Dir+10
- if player1Dir = 20 && player1y < _z1YMin then player1Dir=player1Dir-10
+ if player1Dir = SE && player1x > _z1XMax then player1Dir=player1Dir+10
+ if player1Dir = SE && player1y < _z1YMin then player1Dir=player1Dir-10
 
- if player1Dir = 30 && player1y < _z1YMin then player1Dir=player1Dir+10
- if player1Dir = 30 && player1x < botLimit then player1Dir=player1Dir-10
+ if player1Dir = SW && player1y < _z1YMin then player1Dir=player1Dir+10
+ if player1Dir = SW && player1x < botLimit then player1Dir=player1Dir-10
  
- if player1Dir = 40 && player1y > _z1YMax then player1Dir=player1Dir-10
- if player1Dir = 40 && player1x < botLimit then player1Dir=player1Dir-30
+ if player1Dir = NW && player1y > _z1YMax then player1Dir=player1Dir-10
+ if player1Dir = NW && player1x < botLimit then player1Dir=player1Dir-30
  
- if player1Dir < 10 then player1Dir=10
- if player1Dir > 40 then player1Dir=10
+ if player1Dir < NE then player1Dir=NE
+ if player1Dir > NW then player1Dir=NE
  
-MovePlayer1
- if player1Dir = 10 then gosub moveupandright
- if player1Dir = 20 then gosub movedownandright
- if player1Dir = 30 then gosub movedownandleft
- if player1Dir = 40 then gosub moveupandleft
+ rem MovePlayer1
+ if player1Dir = NE || player1Dir = SE then player1x = player1x + 1 : goto _skipP1PosX
+ player1x = player1x - 1
+ _NUSIZ1{3} = 1
+_skipP1PosX
+ if player1Dir = NE || player1Dir = NW then player1y = player1y + 1 : goto _skipP1PosY
+ player1y = player1y - 1
+_skipP1PosY
  return
+ 
 
-player2collision
+player2_limitcheck
 
   COLUP2=98
   NUSIZ2=$10
@@ -476,30 +478,33 @@ end
  topLimit = _z2XMax
  if boxed{3} || round = 2 then topLimit = _z3XMax
 
- if player2Dir = 10 && player2y > _z2YMax then player2Dir=player2Dir+10
- if player2Dir = 10 && player2x > topLimit then player2Dir=player2Dir+30
+ if player2Dir = NE && player2y > _z2YMax then player2Dir=player2Dir+10
+ if player2Dir = NE && player2x > topLimit then player2Dir=player2Dir+30
 
- if player2Dir = 20 && player2x > topLimit then player2Dir=player2Dir+10
- if player2Dir = 20 && player2y < _z2YMin then player2Dir=player2Dir-10
+ if player2Dir = SE && player2x > topLimit then player2Dir=player2Dir+10
+ if player2Dir = SE && player2y < _z2YMin then player2Dir=player2Dir-10
 
- if player2Dir = 30 && player2y < _z2YMin then player2Dir=player2Dir+10
- if player2Dir = 30 && player2x < _z2XMin then player2Dir=player2Dir-10
+ if player2Dir = SW && player2y < _z2YMin then player2Dir=player2Dir+10
+ if player2Dir = SW && player2x < _z2XMin then player2Dir=player2Dir-10
  
- if player2Dir = 40 && player2y > _z2YMax then player2Dir=player2Dir-10
- if player2Dir = 40 && player2x < _z2XMin then player2Dir=player2Dir-30
+ if player2Dir = NW && player2y > _z2YMax then player2Dir=player2Dir-10
+ if player2Dir = NW && player2x < _z2XMin then player2Dir=player2Dir-30
  
- if player2Dir < 10 then player2Dir=10
- if player2Dir > 40 then player2Dir=10
+ if player2Dir < NE then player2Dir=NE
+ if player2Dir > NW then player2Dir=NE
 
-MovePlayer2
- if player2Dir = 10 then gosub moveupandright2
- if player2Dir = 20 then gosub movedownandright2
- if player2Dir = 30 then gosub movedownandleft2
- if player2Dir = 40 then gosub moveupandleft2
+ rem Move Player2
+ if player2Dir = NE || player2Dir = SE then player2x = player2x + 1 : goto _skipP2PosX
+ player2x = player2x - 1
+ NUSIZ2{3} = 1
+_skipP2PosX
+ if player2Dir = NE || player2Dir = NW then player2y = player2y + 1 : goto _skipP2PosY
+ player2y = player2y - 1
+_skipP2PosY
  return
 
 
-player3collision
+player3_limitcheck
 
   COLUP3=$0E
   NUSIZ3=$10   
@@ -515,29 +520,32 @@ end
  botLimit = _z3XMin
  if boxed{2} then botLimit = _z2XMin
 
- if player3Dir = 10 && player3y > _z3YMax then player3Dir=player3Dir+10
- if player3Dir = 10 && player3x > _z3XMax then player3Dir=player3Dir+30
+ if player3Dir = NE && player3y > _z3YMax then player3Dir=player3Dir+10
+ if player3Dir = NE && player3x > _z3XMax then player3Dir=player3Dir+30
 
- if player3Dir = 20 && player3x > _z3XMax then player3Dir=player3Dir+10
- if player3Dir = 20 && player3y < _z3YMin then player3Dir=player3Dir-10
+ if player3Dir = SE && player3x > _z3XMax then player3Dir=player3Dir+10
+ if player3Dir = SE && player3y < _z3YMin then player3Dir=player3Dir-10
 
- if player3Dir = 30 && player3y < _z3YMin then player3Dir=player3Dir+10
- if player3Dir = 30 && player3x < botLimit then player3Dir=player3Dir-10
+ if player3Dir = SW && player3y < _z3YMin then player3Dir=player3Dir+10
+ if player3Dir = SW && player3x < botLimit then player3Dir=player3Dir-10
  
- if player3Dir = 40 && player3y > _z3YMax then player3Dir=player3Dir-10
- if player3Dir = 40 && player3x < botLimit then player3Dir=player3Dir-30
+ if player3Dir = NW && player3y > _z3YMax then player3Dir=player3Dir-10
+ if player3Dir = NW && player3x < botLimit then player3Dir=player3Dir-30
  
- if player3Dir < 10 then player3Dir=10
- if player3Dir > 40 then player3Dir=10
+ if player3Dir < NE then player3Dir=NE
+ if player3Dir > NW then player3Dir=NE
  
-MovePlayer3
- if player3Dir = 10 then gosub moveupandright3
- if player3Dir = 20 then gosub movedownandright3
- if player3Dir = 30 then gosub movedownandleft3
- if player3Dir = 40 then gosub moveupandleft3
+ rem Move Player3
+ if player3Dir = NE || player3Dir = SE then player3x = player3x + 1 : goto _skipP3PosX
+ player3x = player3x - 1
+ NUSIZ3{3} = 1
+_skipP3PosX
+ if player3Dir = NE || player3Dir = NW then player3y = player3y + 1 : goto _skipP3PosY
+ player3y = player3y - 1
+_skipP3PosY
  return
  
-player4collision
+player4_limitcheck
 
   COLUP4=192
   NUSIZ4=$10
@@ -552,210 +560,69 @@ end
  topLimit = _z4XMax
  if boxed{1} then topLimit = _z1XMax
 
- if player4Dir = 10 && player4y > _z4YMax then player4Dir=player4Dir+10
- if player4Dir = 10 && player4x > topLimit then player4Dir=player4Dir+30
+ if player4Dir = NE && player4y > _z4YMax then player4Dir=player4Dir+10
+ if player4Dir = NE && player4x > topLimit then player4Dir=player4Dir+30
 
- if player4Dir = 20 && player4x > topLimit then player4Dir=player4Dir+10
- if player4Dir = 20 && player4y < _z4YMin then player4Dir=player4Dir-10
+ if player4Dir = SE && player4x > topLimit then player4Dir=player4Dir+10
+ if player4Dir = SE && player4y < _z4YMin then player4Dir=player4Dir-10
 
- if player4Dir = 30 && player4y < _z4YMin then player4Dir=player4Dir+10
- if player4Dir = 30 && player4x < _z4XMin then player4Dir=player4Dir-10
+ if player4Dir = SW && player4y < _z4YMin then player4Dir=player4Dir+10
+ if player4Dir = SW && player4x < _z4XMin then player4Dir=player4Dir-10
  
- if player4Dir = 40 && player4y > _z4YMax then player4Dir=player4Dir-10
- if player4Dir = 40 && player4x < _z4XMin then player4Dir=player4Dir-30
+ if player4Dir = NW && player4y > _z4YMax then player4Dir=player4Dir-10
+ if player4Dir = NW && player4x < _z4XMin then player4Dir=player4Dir-30
  
- if player4Dir < 10 then player4Dir=10
- if player4Dir > 40 then player4Dir=10
+ if player4Dir < NE then player4Dir=NE
+ if player4Dir > NW then player4Dir=NE
  
-MovePlayer4
- if player4Dir = 10 then gosub moveupandright4
- if player4Dir = 20 then gosub movedownandright4
- if player4Dir = 30 then gosub movedownandleft4
- if player4Dir = 40 then gosub moveupandleft4
+ rem Move Player4
+ if player4Dir = NE || player4Dir = SE then player4x = player4x + 1 : goto _skipP4PosX
+ player4x = player4x - 1
+ NUSIZ4{3} = 1
+_skipP4PosX
+ if player4Dir = NE || player4Dir = NW then player4y = player4y + 1 : goto _skipP4PosY
+ player4y = player4y - 1
+_skipP4PosY
  return
 
+ball_limitcheck
+ if ballDir = NE && bally > 84 then ballDir=ballDir+10
+ if ballDir = NE && ballx > 136 then ballDir=ballDir+30
 
-player5collision
+ if ballDir = SE && ballx > 136 then ballDir=ballDir+10
+ if ballDir = SE && bally < 9 then ballDir=ballDir-10
 
-  COLUP5=98
-  NUSIZ5=$10
-
- player5:
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
- %111111
-end
-   player5x = 10
-   player5y = 10
-   return
-
-ballcollision
- if ballDir = 10 && bally > 84 then ballDir=ballDir+10
- if ballDir = 10 && ballx > 136 then ballDir=ballDir+30
-
- if ballDir = 20 && ballx > 136 then ballDir=ballDir+10
- if ballDir = 20 && bally < 9 then ballDir=ballDir-10
-
- if ballDir = 30 && bally < 9 then ballDir=ballDir+10
- if ballDir = 30 && ballx < 22 then ballDir=ballDir-10
+ if ballDir = SW && bally < 9 then ballDir=ballDir+10
+ if ballDir = SW && ballx < 22 then ballDir=ballDir-10
  
- if ballDir = 40 && bally > 84 then ballDir=ballDir-10
- if ballDir = 40 && ballx < 22 then ballDir=ballDir-30
+ if ballDir = NW && bally > 84 then ballDir=ballDir-10
+ if ballDir = NW && ballx < 22 then ballDir=ballDir-30
  
- if ballDir < 10 then ballDir=10
- if ballDir > 40 then ballDir=10
+ if ballDir < NE then ballDir=NE
+ if ballDir > NW then ballDir=NE
  
-MoveBall
- if ballDir = 10 then gosub moveupandright8
- if ballDir = 20 then gosub movedownandright8
- if ballDir = 30 then gosub movedownandleft8
- if ballDir = 40 then gosub moveupandleft8
+
+ rem MoveBall
+
+ if ballDir = NE || ballDir = SE then ballx = ballx + ballSpeed : goto _skipBallPosX
+ ballx = ballx - ballSpeed
+ NUSIZ2{3} = 1
+_skipBallPosX
+ if ballDir = NE || ballDir = NW then bally = bally + ballSpeed : goto _skipBallPosY
+ bally = bally - ballSpeed
+_skipBallPosY
  
  missile1x = ballx + 1
  missile0x = ballx + 1
  missile1y = bally - 1
  missile0y = bally
-
- return
-
-moveupandright 
- player1x = player1x + 1
- player1y = player1y + 1
- return
- 
- 
-moveupandleft
- player1x = player1x - 1
- player1y = player1y + 1
- _NUSIZ1{3} = 1
- return
- 
- 
-movedownandright
- player1x = player1x + 1
- player1y = player1y - 1
- return
- 
- 
-movedownandleft
- player1x = player1x - 1
- player1y = player1y - 1
- _NUSIZ1{3} = 1
- return
- 
-moveupandright2 
- player2x = player2x + 1
- player2y = player2y + 1
- return
- 
- 
-moveupandleft2
- player2x = player2x - 1
- player2y = player2y + 1
- NUSIZ2{3} = 1
- return
- 
- 
-movedownandright2
- player2x = player2x + 1
- player2y = player2y - 1
- return
- 
- 
-movedownandleft2
- player2x = player2x - 1
- player2y = player2y - 1
- NUSIZ2{3} = 1
- return
- 
- 
-moveupandright3 
- player3x = player3x + 1
- player3y = player3y + 1
- return
- 
- 
-moveupandleft3
- player3x = player3x - 1
- player3y = player3y + 1
- NUSIZ3{3} = 1
- return
- 
- 
-movedownandright3
- player3x = player3x + 1
- player3y = player3y - 1
- return
- 
- 
-movedownandleft3
- player3x = player3x - 1
- player3y = player3y - 1
- NUSIZ3{3} = 1
- return
- 
- 
-moveupandright4 
- player4x = player4x + 1
- player4y = player4y + 1
- return
- 
- 
-moveupandleft4
- player4x = player4x - 1
- player4y = player4y + 1
- NUSIZ4{3} = 1
- return
- 
- 
-movedownandright4
- player4x = player4x + 1
- player4y = player4y - 1
- return
- 
- 
-movedownandleft4
- player4x = player4x - 1
- player4y = player4y - 1
- NUSIZ4{3} = 1
- return
- 
-moveupandright8 
- ballx = ballx + ballSpeed
- bally = bally + ballSpeed
- return
- 
- 
-moveupandleft8
- ballx = ballx - ballSpeed
- bally = bally + ballSpeed
- return
- 
- 
-movedownandright8
- ballx = ballx + ballSpeed
- bally = bally - ballSpeed
- return
- 
- 
-movedownandleft8
- ballx = ballx - ballSpeed
- bally = bally - ballSpeed
  return
  
  bank 2
   
   rem moving some logic into the vblank time because there is a small amount of it leftover and we need all we can get
   vblank
-  if player0y = 88 then player0y = 87
+  if player0y = 86 then player0y = 85
   if player0y = 13 then player0y = 14
   if player0x = 133 then player0x = 132
   if player0x = 19 then player0x = 20 
@@ -773,16 +640,5 @@ movedownandleft8
  asm
  include "titlescreen/asm/titlescreen.asm"
 end
-     rem !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!THIS IS THE END OF THE PROGRAM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
-     rem ===============================================================================
+
      rem ===============================================================================
