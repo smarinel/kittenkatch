@@ -79,7 +79,7 @@
   const NW = 40
 
   kittenMovement = _baseKittenSpeed
- 
+
   round = 1
   timerlo=10
 
@@ -87,7 +87,9 @@
 
   sfxplaying=0
   sfxtimer=0
-  AUDV0=0 
+  AUDV0=0
+
+  timer = 0
  
   rem this sets if we start off with kitten 1 or 2
   if rand&1 = 1 then inBox{3} = 1 else inBox{3} = 0
@@ -110,7 +112,9 @@ titlepage
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
   if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1
   
-  if joy0fire || switchreset then sfxtimer = 0 : sfxplaying = 0: AUDV0 = 0 : goto gamestart
+  if timer < 30 then timer = timer + 1
+
+  if joy0fire && timer > 10 then sfxtimer = 0 : sfxplaying = 0: AUDV0 = 0 : goto gamestart
   goto titlepage
 
 
@@ -148,9 +152,11 @@ pauseloop
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
 
+  if round = 99 && joy0fire then timer = timer + 1
+  if round = 99 && timer > 30 && !joy0fire then reboot 
   if switchreset then reboot
 
-  if switchbw || round = 99 then COLUBK = $02 : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
+  if switchbw || round > 98 then COLUBK = $02 : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
 
   pfheight=1
  
@@ -230,6 +236,8 @@ end
 
   rem Hitting Kittens
   if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
+  rem if collision(player0,player1) && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
+
 
   rem if we hit the player with a ball and we aren't already stunned 
   if collision(player0,ball) && player0Timer = 0 then AUDV0 = 0 : gosub ballStunPlayer
@@ -242,7 +250,7 @@ end
 __skipPlayerInput
 
   timer = timer + 1  
-  if scoreAmount = 0 then round = 99 : goto pauseloop
+  if scoreAmount = 0 then round = 99 : timer = 0 : goto pauseloop
   if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1
   rem if round < 7 then lifecolor = $00
   rem statusbarcolor = $00
@@ -357,6 +365,9 @@ scoreKitten
   if carrying = 3 then player3x = 10 : player3y = 90 : player3Timer = 1 : boxed{3} = 1 
   if carrying = 4 then player4x = 10 : player4y = 90 : player4Timer = 1 : boxed{4} = 1
   carrying = 0
+
+  rem make sure we must release the button before we can grab another kitten
+  inBox{2} = 1
 
   rem if on the first round then we set both round complete bools to true and skip the rest
   if round = 1 then temp2 = 1: temp3 = 1 : goto __endRound
@@ -476,7 +487,7 @@ player2_limitcheck
 end
 
  topLimit = _z2XMax
- if boxed{3} || round = 2 then topLimit = _z3XMax
+ if boxed{3} || round < 3 then topLimit = _z3XMax
 
  if player2Dir = NE && player2y > _z2YMax then player2Dir=player2Dir+10
  if player2Dir = NE && player2x > topLimit then player2Dir=player2Dir+30
