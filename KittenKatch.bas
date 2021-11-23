@@ -151,9 +151,9 @@ pauseloop
   COLUBK=$C8
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
-
-  if round = 99 && joy0fire then timer = timer + 1
-  if round = 99 && timer > 30 && !joy0fire then reboot 
+  if round = 99 && !joy0fire then round = 100
+  if round = 100 && joy0fire then timer = timer + 1
+  if round = 100 && timer > 10 && !joy0fire then reboot 
   if switchreset then reboot
 
   if switchbw || round > 98 then COLUBK = $02 : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
