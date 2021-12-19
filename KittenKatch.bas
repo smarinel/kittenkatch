@@ -17,7 +17,6 @@
   dim  player4Dir=d
   dim  player0Timer=e     
   dim  scoreAmount=f
-  dim  kittenMovement=g     
   dim  ballDir=h    
   dim  timerlo=i
   dim  ballSpeed=j
@@ -27,18 +26,47 @@
   dim  round = n
   dim  carrying=o
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
+  rem inBox{3} is for setting which is the startng round 1 kitten
   dim  inBox=p
   dim  player1Timer=q
   dim  player2Timer=r
-  dim  topLimit=s
   dim  timer = t
-  dim  botLimit=x
   dim  player3Timer=v  
   dim  player4Timer=u
   dim  ballTimer = w
   dim  statusbarcolor = y
   dim  bmp_48x2_2_index=z
+
+  ;```````````````````````````````````````````````````````````````
+  ;  Remembers the high score until the game is turned off.
+  ;
+  dim _High_Score1 = g
+  dim _High_Score2 = s
+  dim _High_Score3 = x
   
+  rem this is only used on the main menu where these should be free values
+  dim _Score1_Mem = a
+  dim _Score2_Mem = b
+  dim _Score3_Mem = c
+
+
+  dim topLimit=temp3
+  dim botLimit=temp2
+  dim currentSpeed=temp5
+
+   
+   ;```````````````````````````````````````````````````````````````
+   ;  Converts 6 digit score to 3 sets of two digits.
+   ;
+   ;  The 100 thousands and 10 thousands digits are held by _sc1.
+   ;  The thousands and hundreds digits are held by _sc2.
+   ;  The tens and ones digits are held by _sc3.
+   ;
+   dim _sc1 = score
+   dim _sc2 = score+1
+   dim _sc3 = score+2
+
+
   rem zones - in a strange order because of creating separation
   rem ----------------------
   rem |    4      |   1    |
@@ -78,6 +106,15 @@
   const SW = 30
   const NW = 40
 
+  _High_Score1 = 0
+  _High_Score2 = 1
+  _High_Score3 = 10
+
+  _Score1_Mem = 0
+  _Score2_Mem = 0
+  _Score3_Mem = 0
+
+  timerlo = 0
 __start
 
    ;***************************************************************
@@ -88,7 +125,7 @@ __start
    j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
    s = 0 : t = 0 : u = 0 : v = 0 : w = 0 : x = 0 : y = 0 : z = 0 : temp5 = 0
 
-  kittenMovement = _baseKittenSpeed
+  rem kittenMovement = _baseKittenSpeed
 
   round = 1
   timerlo=10
@@ -342,9 +379,11 @@ setupRound
   player3y=25
   player4y=55
 
-  if round = 9 then lives = lives + 32 : ballSpeed = 3 : goto _skipInitExtras
-  if round = 7 then kittenMovement = _maxKittenSpeed : goto _skipInitExtras
-  if round = 5 then kittenMovement = _middleKittenSpeed :goto _skipInitExtras
+  if round = 10 then lives = lives + 32 : ballSpeed = 3 : goto _skipInitExtras
+  if round = 15 then lives = lives + 32 : ballSpeed = 4 : goto _skipInitExtras
+  rem moved this logic to a temp var in the main loop where we check timers
+  rem if round = 7 then kittenMovement = _maxKittenSpeed : goto _skipInitExtras
+  rem if round = 5 then kittenMovement = _middleKittenSpeed :goto _skipInitExtras
 _skipInitExtras
 
   ballx=75
@@ -412,6 +451,7 @@ __endRound
   sfxplaying = 1 : AUDC0 = 12 : AUDF0 = temp6 : AUDV0 = 10
   score = score + 15
   if round > 9 then score = score + 10
+  if round > 14 then score = score + 10
   if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
   return
 
@@ -475,6 +515,8 @@ player1_limitcheck
  %1000111
  %1000101
 end
+ 
+ NUSIZ1=$10
 
  botLimit = _z1XMin
  if boxed{4} || round < 3 then botLimit = _z4XMin
@@ -658,7 +700,54 @@ _skipBallPosY
  missile1y = bally - 1
  missile0y = bally
  return
+
+__Check_High_Score
+
+  rem stash the curren score
+  _Score1_Mem = _sc1 : _Score2_Mem = _sc2 : _Score3_Mem = _sc3  
+   ;***************************************************************
+   ;
+   ;  High score check.
+   ;
+   ;  Checks for a new high score.
+   ;
+   ;```````````````````````````````````````````````````````````````
+   ;  Checks first byte.
+   ;
+   if _sc1 > _High_Score1 then goto __New_High_Score
+   if _sc1 < _High_Score1 then goto __Skip_High_Score
+
+   ;```````````````````````````````````````````````````````````````
+   ;  First byte equal. Checks second byte.
+   ;
+   if _sc2 > _High_Score2 then goto __New_High_Score
+   if _sc2 < _High_Score2 then goto __Skip_High_Score
+
+   ;```````````````````````````````````````````````````````````````
+   ;  Second byte equal. Checks third byte.
+   ;
+   if _sc3 > _High_Score3 then goto __New_High_Score
+   if _sc3 < _High_Score3 then goto __Skip_High_Score
+
+   ;```````````````````````````````````````````````````````````````
+   ;  All bytes equal. Skips high score.
+   ;
+   goto __Skip_High_Score
+
+   ;```````````````````````````````````````````````````````````````
+   ;  All bytes not equal. New high score!
+   ;
+__New_High_Score
+   _High_Score1 = _sc1 : _High_Score2 = _sc2 : _High_Score3 = _sc3
+
+__Skip_High_Score
+  goto pauseloop 
  
+__High_Flip
+  if timerlo = 0 then _sc1 = _High_Score1 : _sc2 = _High_Score2 : _sc3 = _High_Score3 : timerlo = 1
+  if timerlo = 1 then _sc1 = _Score1_Mem : _sc2 = _Score2_Mem : _sc3 = _Score3_Mem : timerlo = 0
+  return   
+
  bank 2
   
   rem moving some logic into the vblank time because there is a small amount of it leftover and we need all we can get
@@ -668,11 +757,16 @@ _skipBallPosY
   if player0x = 133 then player0x = 132
   if player0x = 19 then player0x = 20 
   
-  rem Keep the kittens from moving every single frame  
-  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = kittenMovement
-  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = kittenMovement
-  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = kittenMovement
-  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = kittenMovement
+  rem Keep the kittens from moving every single frame 
+  rem Set a temp var for the speed of the kittens. Used to be kittenSpeed but this saves a var
+  currentSpeed = _baseKittenSpeed
+  if round > 4 then currentSpeed = _middleKittenSpeed 
+  if round > 6 then currentSpeed = _maxKittenSpeed
+
+  if player1Timer > 0 && !boxed{1} then player1Timer = player1Timer - 1 else player1Timer = currentSpeed
+  if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = currentSpeed
+  if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = currentSpeed
+  if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = currentSpeed
   if ballTimer > 0 then ballTimer = ballTimer - 1 else ballTimer = _maxKittenSpeed
   return 
 
