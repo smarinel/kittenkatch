@@ -1,12 +1,14 @@
-Kitten Katch 
+Hello everyone!
 
-Kittens on the loose! Your young kittens have all escaped their box and you must catch them before the cause a mess. Each round they will scurry around the yard, trying to avoid capture. In later stages one of them will release a ball of yarn that will bounce around and tangle you up if it hits you!
+I would like to share a game I have been working on to learn the basics of the Atari 2600 over the last 6 months or so - Kitten Katch!
+
+Kittens on the loose! Your young kittens have all escaped their box and you must catch them before the cause a mess. Each round they will scurry around the yard, trying to avoid capture. In later stages one of them will release a ball of yard that will bounce around and tangle you up if it hits you!
 
 
 How it works:
 
 * Move around using the Joystick.
-* Press Fire to grab a kitten when you are near. 
+* Press Fire to grab a kitten when you catch up. 
 * Carry each kitten to the box to drop them off.
 * You must deposit each loose kitten back in the box before the timer runs out in order to clear the stage. 
 * Each round will be a bit harder than the last. See how far you can go!
@@ -17,5 +19,14 @@ Scoring:
 * For each kitten you return to the box you earn 15 points.
 * At the end of each round you earn additional points for the time remaining. 
 * Getting hit by the ball of yarn doesn’t just cost you time, but also costs you a point. 
-* After surviving 9 rounds of Kitten Katch a BONUS 10 points will be applied for each kitten you rescue.
+* After surviving 9 rounds of Kitten Katch a bonus 10 points will be applied for each kitten you rescue.
 
+
+
+Built in Batari Basic using the multi-sprite kernel along with the titlescreen kernel from RevEng. I used the background builder from alienbill for the title screen art. 
+
+When I got started on this project I didn't understand how the 2600 worked at all and for a moment was worried there was no way to get the number of characters on the screen I needed for all the kittens. I found Miss It by acousticguitar which really made me believe that the multisprite kernel could actually pull off what I was hoping to do. I used their movement logic to kickstart things and the game rolled from there. Everyone should go check out Miss It! Anyway, this is very much a first attempt at making something for the 2600, it was a lot of fun. You can find the source and bin below. 
+
+https://github.com/smarinel/kittenkatch
+
+Please feel free to share and play the game, just don't sell it! I'll be getting a few physical copies made to give away, maybe in a score challenge sometime? I'll keep everyone posted!

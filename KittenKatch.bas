@@ -78,6 +78,16 @@
   const SW = 30
   const NW = 40
 
+__start
+
+   ;***************************************************************
+   ;
+   ;  Clears all normal variables (faster way).
+   ;
+   a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : f = 0 : g = 0 : h = 0 : i = 0
+   j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
+   s = 0 : t = 0 : u = 0 : v = 0 : w = 0 : x = 0 : y = 0 : z = 0 : temp5 = 0
+
   kittenMovement = _baseKittenSpeed
 
   round = 1
@@ -96,25 +106,35 @@
   
   bmp_48x2_2_index=64
 
+  scorecolor = $0C
+
 titlepage
-  gosub titledrawscreen bank2
+  
   
   rem I know this looks crazy, but it was the only way I could get some sort of title song playing. 
   rem using ballTimer here since it gets cleanly setup with good values in the setupRound routine.
-  if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 1 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 16 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 2 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 31 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 
-  if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 
+  
+  rem change the smaller menu graphic every round of music - putting it first to reduce if checks in this case
   if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16
-  if bmp_48x2_2_index = 80 then bmp_48x2_2_index = 0
+  if bmp_48x2_2_index = 80 then bmp_48x2_2_index = 0 : goto __cont_menu
+
+  if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && ballTimer = 1 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 16 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && ballTimer = 2 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 31 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && ballTimer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && ballTimer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
+
+__cont_menu
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
   if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1
   
   if timer < 30 then timer = timer + 1
 
   if joy0fire && timer > 10 then sfxtimer = 0 : sfxplaying = 0: AUDV0 = 0 : goto gamestart
+  
+  gosub titledrawscreen bank2
+  
   goto titlepage
 
 
@@ -153,10 +173,10 @@ pauseloop
   COLUPF=$F2
   if round = 99 && !joy0fire then round = 100
   if round = 100 && joy0fire then timer = timer + 1
-  if round = 100 && timer > 10 && !joy0fire then reboot 
-  if switchreset then reboot
+  if round = 100 && timer > 10 && !joy0fire then goto __start 
+  if switchreset then goto __start
 
-  if switchbw || round > 98 then COLUBK = $02 : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
+  if switchbw || round > 98 then COLUBK = $0A : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
 
   pfheight=1
  
@@ -285,14 +305,20 @@ __skipCarry4
 setupRound
   rem ****************** 
   rem STARTING POSITIONS
-  rem ******************
+  rem ****************** 
   player0x=75
   player1x=120
   player2x=40
   player0y=25
   player1y=65
   player2y=25
- 
+
+  if round = 1 && inBox{3}  then player1x=0 : player1y=0
+  if round = 1 && !inBox{3} then player2x=0 : player2y=0
+
+  scorecolor = $00
+
+  rem CUT ALL THIS STUFF FOR THE BONUS MARKER
   rem we use lives to show what round we are on up to 6, then we loop  
   rem lives = lives + 32
   rem if lives > 223 then lives = lives + 32
@@ -340,6 +366,8 @@ _skipInitExtras
   timer = 0
   AUDV0 = 0
 
+  bmp_48x2_2_index = 0
+
   timerlo = timerlo + _timerRate
   if timerlo < _baseTime  then scoreAmount = _baseTime - timerlo : goto __protectScoreAmount
   scoreAmount = 10
@@ -354,7 +382,7 @@ __protectScoreAmount
 
 ballStunPlayer
   player0Timer = 50
-  score = score - 1
+  score = score - 10
   sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
   return
 
@@ -378,7 +406,10 @@ scoreKitten
   rem in further rounds we test if we boxed everyone
   if boxed{3} && boxed{4} then temp3 = 1
 __endRound
-  sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 18 : AUDV0 = 10
+  rem using the var from the main menu here to count and increase the freq of the score audio since it was free
+  bmp_48x2_2_index = bmp_48x2_2_index + 1
+  temp6 = 18 - bmp_48x2_2_index
+  sfxplaying = 1 : AUDC0 = 12 : AUDF0 = temp6 : AUDV0 = 10
   score = score + 15
   if round > 9 then score = score + 10
   if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
@@ -617,7 +648,6 @@ ball_limitcheck
 
  if ballDir = NE || ballDir = SE then ballx = ballx + ballSpeed : goto _skipBallPosX
  ballx = ballx - ballSpeed
- NUSIZ2{3} = 1
 _skipBallPosX
  if ballDir = NE || ballDir = NW then bally = bally + ballSpeed : goto _skipBallPosY
  bally = bally - ballSpeed
