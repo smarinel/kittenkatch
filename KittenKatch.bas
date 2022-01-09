@@ -107,8 +107,8 @@
   const NW = 40
 
   _High_Score1 = 0
-  _High_Score2 = 1
-  _High_Score3 = 10
+  _High_Score2 = 0
+  _High_Score3 = 0
 
   _Score1_Mem = 0
   _Score2_Mem = 0
@@ -121,14 +121,13 @@ __start
    ;
    ;  Clears all normal variables (faster way).
    ;
-   a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : f = 0 : g = 0 : h = 0 : i = 0
+   rem a = 0 : b = 0 : c = 0 :  <- this is now storing the old score so we don't reset
+   d = 0 : e = 0 : f = 0  : h = 0 : i = 0
    j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
-   s = 0 : t = 0 : u = 0 : v = 0 : w = 0 : x = 0 : y = 0 : z = 0 : temp5 = 0
-
-  rem kittenMovement = _baseKittenSpeed
+   t = 0 : u = 0 : v = 0 : w = 0 : y = 0 : z = 0 : temp5 = 0
 
   round = 1
-  timerlo=10
+  rem timerlo=10
 
   ballSpeed = 2
 
@@ -152,7 +151,7 @@ titlepage
   rem using ballTimer here since it gets cleanly setup with good values in the setupRound routine.
   
   rem change the smaller menu graphic every round of music - putting it first to reduce if checks in this case
-  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16
+  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16 : gosub __High_Flip
   if bmp_48x2_2_index = 80 then bmp_48x2_2_index = 0 : goto __cont_menu
 
   if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 : goto __cont_menu
@@ -164,7 +163,7 @@ titlepage
 
 __cont_menu
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
-  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1
+  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1 
   
   if timer < 30 then timer = timer + 1
 
@@ -179,6 +178,10 @@ gamestart
   rem Set values that need to be applied every round
   gosub setupRound
   lives = 0   
+  
+  rem reset the score
+  score = 0
+
 main
 
    rem Set so there is a single verison of P0 and the missle0 is 2 px
@@ -208,6 +211,9 @@ pauseloop
   COLUBK=$C8
   rem Playfield Foreground Color - also deteremines the ball sprite color
   COLUPF=$F2
+  
+  if round = 99 then gosub __Check_High_Score
+
   if round = 99 && !joy0fire then round = 100
   if round = 100 && joy0fire then timer = timer + 1
   if round = 100 && timer > 10 && !joy0fire then goto __start 
@@ -349,6 +355,8 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
+  player5x=83
+  player5y=65
 
   if round = 1 && inBox{3}  then player1x=0 : player1y=0
   if round = 1 && !inBox{3} then player2x=0 : player2y=0
@@ -506,6 +514,9 @@ __skipUpdate3
 __skipUpdate4
 
     if ballTimer = 0 && round > 3 then gosub ball_limitcheck
+
+    rem gosub player5_draw
+
     return
 
 player1_limitcheck
@@ -701,6 +712,19 @@ _skipBallPosY
  missile0y = bally
  return
 
+player5_draw
+
+  COLUP5=$0E
+  NUSIZ5=$10
+
+ player5:
+ %1111111
+ %0101110
+ %1000111
+ %1111111
+end
+ return
+
 __Check_High_Score
 
   rem stash the curren score
@@ -741,11 +765,11 @@ __New_High_Score
    _High_Score1 = _sc1 : _High_Score2 = _sc2 : _High_Score3 = _sc3
 
 __Skip_High_Score
-  goto pauseloop 
+  return
  
 __High_Flip
-  if timerlo = 0 then _sc1 = _High_Score1 : _sc2 = _High_Score2 : _sc3 = _High_Score3 : timerlo = 1
-  if timerlo = 1 then _sc1 = _Score1_Mem : _sc2 = _Score2_Mem : _sc3 = _Score3_Mem : timerlo = 0
+  if _sc3 = _Score3_Mem && _sc2 = _Score2_Mem && _sc1 = _Score1_Mem then _sc1 = _High_Score1 : _sc2 = _High_Score2 : _sc3 = _High_Score3 : return
+  _sc1 = _Score1_Mem : _sc2 = _Score2_Mem : _sc3 = _Score3_Mem
   return   
 
  bank 2
