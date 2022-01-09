@@ -219,7 +219,7 @@ pauseloop
   if round = 100 && timer > 10 && !joy0fire then goto __start 
   if switchreset then goto __start
 
-  if switchbw || round > 98 then COLUBK = $0A : COLUPF = $06 : drawscreen : AUDV0 = 0: goto pauseloop 
+  if switchbw || round > 98 then COLUBK = $0A : COLUPF = $06 : drawscreen : goto pauseloop 
 
   pfheight=1
  
@@ -313,10 +313,11 @@ end
 __skipPlayerInput
 
   timer = timer + 1  
-  if scoreAmount = 0 then round = 99 : timer = 0 : goto pauseloop
-  if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1
+  if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1 
   rem if round < 7 then lifecolor = $00
-  rem statusbarcolor = $00
+  if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
+  if scoreAmount < 10 && sfxplaying = 0 then sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
+  if scoreAmount = 0 then round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -355,13 +356,14 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
-  player5x=83
-  player5y=65
+  rem player5x=83
+  rem player5y=65
 
   if round = 1 && inBox{3}  then player1x=0 : player1y=0
   if round = 1 && !inBox{3} then player2x=0 : player2y=0
 
   scorecolor = $00
+  statusbarcolor = $00
 
   rem CUT ALL THIS STUFF FOR THE BONUS MARKER
   rem we use lives to show what round we are on up to 6, then we loop  
