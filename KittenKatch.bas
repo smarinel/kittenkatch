@@ -28,6 +28,7 @@
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
   rem inBox{3} is for setting which is the startng round 1 kitten
   rem inBox{6} is used for knowing if we have actived the top saucer
+  rem inBox{7} is used to know we have handled the saucer getting started
   dim  inBox=p
   dim  player1Timer=q
   dim  player2Timer=r
@@ -122,28 +123,21 @@ __start
    ;
    ;  Clears all normal variables (faster way).
    ;
-   rem a = 0 : b = 0 : c = 0 :  <- this is now storing the old score so we don't reset
    d = 0 : e = 0 : f = 0  : h = 0 : i = 0
    j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
    t = 0 : u = 0 : v = 0 : w = 0 : y = 0 : z = 0 : temp5 = 0
 
   round = 1
-  inBox = 0
-
   ballSpeed = 2
 
-  sfxplaying=0
-  sfxtimer=0
   AUDV0=0
-
-  timer = 0
  
   rem this sets if we start off with kitten 1 or 2
   if rand&1 = 1 then inBox{3} = 1
   
   bmp_48x2_2_index=64
 
-  rem scorecolor = $0C
+  scorecolor = $0C
 
 titlepage
   
@@ -311,9 +305,9 @@ end
 
   timer = timer + 1  
   if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1 
-  rem if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
-  if scoreAmount < 20 then statusbarcolor = statusbarcolor + 1 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
-  if scoreAmount = 0 then statusbarcolor = 0 : round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
+  if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
+  if scoreAmount < 20 && sfxplaying = 0 then sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
+  if scoreAmount = 0 then round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -431,7 +425,7 @@ __protectScoreAmount
 ballStunPlayer
   player0Timer = 50
   score = score - 10
-  sfxplaying = 1 : AUDC0 = 5 : AUDF0 = 10 : AUDV0 = 10
+  sfxplaying = 1 : AUDC0 = 8 : AUDF0 = 10 : AUDV0 = 10
   return
 
 scoreKitten
@@ -462,7 +456,7 @@ __endRound
   if round > 9 then score = score + 10
   if round > 14 then score = score + 10
   rem testing if we should summon the saucer
-  if boxed{3} && boxed{2} && !inBox{6} then inBox{6} = 1 : player5y = 30
+  if boxed{3} && boxed{2} && !inBox{6} then inBox{6} = 1 : player5y = 15
   if boxed{1} && boxed{4} && !inBox{6} then inBox{6} = 1 : player5y = 80
   
   if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
@@ -470,6 +464,7 @@ __endRound
 
   rem when we finish a round, give the player 5 points for every "block" of 10 they had left on the timer.
 roundScore
+  COLUPF = $F2
   t=t+1
   if t < 4 then drawscreen : goto roundScore
   if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
@@ -532,7 +527,8 @@ player1_limitcheck
  %1000101
 end
  
- NUSIZ1=$10
+ _NUSIZ1=$10
+ rem NUSIZ1=$10
 
  botLimit = _z1XMin
  if boxed{4} || round < 3 then botLimit = _z4XMin
@@ -572,7 +568,7 @@ player2_limitcheck
  %0011010
  %0101110
  %1000111
- %1000101
+ %1100101
 end
 
  topLimit = _z2XMax
@@ -613,7 +609,7 @@ player3_limitcheck
  %0011010
  %0101110
  %1000111
- %1000101
+ %0100101
 end
 
 
@@ -652,9 +648,9 @@ player4_limitcheck
 
  player4:
  %0011010
- %0101110
+ %0111110
  %1000111
- %1000101
+ %0100101
 end
 
  topLimit = _z4XMax
@@ -796,10 +792,10 @@ __skipPlayerInput
 
   if !inBox{6} || inBox{7} then goto __SkipSaucer
   rem if we are ready for the saucer randomly choose if it appears
-  temp5 = rand : if temp5 < 64 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
+  temp5 = rand : if temp5 < 192 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
  
   rem saucer either are on the right or left side of the field.
-  temp6 = 120
+  temp6 = 130
   if temp5 > 218 then temp6 = 35
   player5x = temp6
   
