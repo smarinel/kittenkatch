@@ -27,6 +27,7 @@
   dim  carrying=o
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
   rem inBox{3} is for setting which is the startng round 1 kitten
+  rem inBox{6} is used for knowing if we have actived the top saucer
   dim  inBox=p
   dim  player1Timer=q
   dim  player2Timer=r
@@ -127,7 +128,7 @@ __start
    t = 0 : u = 0 : v = 0 : w = 0 : y = 0 : z = 0 : temp5 = 0
 
   round = 1
-  rem timerlo=10
+  inBox = 0
 
   ballSpeed = 2
 
@@ -138,11 +139,11 @@ __start
   timer = 0
  
   rem this sets if we start off with kitten 1 or 2
-  if rand&1 = 1 then inBox{3} = 1 else inBox{3} = 0
+  if rand&1 = 1 then inBox{3} = 1
   
   bmp_48x2_2_index=64
 
-  scorecolor = $0C
+  rem scorecolor = $0C
 
 titlepage
   
@@ -186,11 +187,9 @@ main
 
    rem Set so there is a single verison of P0 and the missle0 is 2 px
    NUSIZ0=$10
-   NUSIZ1=$10
-   _NUSIZ1=$10
-
    CTRLPF=$25
-  
+
+
 pauseloop
 
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
@@ -215,11 +214,11 @@ pauseloop
   if round = 99 then gosub __Check_High_Score
 
   if round = 99 && !joy0fire then round = 100
-  if round = 100 && joy0fire then timer = timer + 1
+  if round = 100 && joy0fire then timer = timer + 1 
   if round = 100 && timer > 10 && !joy0fire then goto __start 
   if switchreset then goto __start
 
-  if switchbw || round > 98 then COLUBK = $0A : COLUPF = $06 : drawscreen : goto pauseloop 
+  if switchbw || round > 98 then player0Timer = player0Timer + 1 : COLUBK = $0A : COLUPF = $06 : drawscreen : goto pauseloop 
 
   pfheight=1
  
@@ -297,27 +296,24 @@ end
  
   if !joy0fire && inBox{2} then inBox{2} = 0 
 
+  rem Testing if we touched the milk saucer (player 5) which only appears when both 1 & 4 are collected
+  temp5 = 0
+  if boxed{2} && boxed{3} && player0y < 50 then temp5 = 1
+  if boxed{1} && boxed{4} && player0y > 50 then temp5 = 1
+  if collision(player0, player1) && temp5=1 && carrying = 0 then player0Timer = 30 : score = score + 25 : player5x = 0 : player5y = 0 : sfxplaying = 1 : AUDC0 = 2 : AUDF0 = 10 : AUDV0 = 10
   rem Hitting Kittens
-  if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
+  if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then gosub subGrab
   rem if collision(player0,player1) && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
 
 
   rem if we hit the player with a ball and we aren't already stunned 
   if collision(player0,ball) && player0Timer = 0 then AUDV0 = 0 : gosub ballStunPlayer
 
-  if player0Timer > 0 then player0Timer = player0Timer - 1 : goto __skipPlayerInput   
-  if joy0right then player0x=player0x+1 : REFP0 = 0
-  if joy0left then player0x=player0x-1 : REFP0 = 8
-  if joy0up then player0y=player0y+1
-  if joy0down then player0y=player0y-1  
-__skipPlayerInput
-
   timer = timer + 1  
   if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1 
-  rem if round < 7 then lifecolor = $00
-  if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
-  if scoreAmount < 10 && sfxplaying = 0 then sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
-  if scoreAmount = 0 then round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
+  rem if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
+  if scoreAmount < 20 then statusbarcolor = statusbarcolor + 1 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
+  if scoreAmount = 0 then statusbarcolor = 0 : round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
   statusbarlength = scoreAmount
 
   gosub updateKittens
@@ -356,14 +352,17 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
-  rem player5x=83
-  rem player5y=65
+  player5x=0
+  player5y=0
 
   if round = 1 && inBox{3}  then player1x=0 : player1y=0
   if round = 1 && !inBox{3} then player2x=0 : player2y=0
 
   scorecolor = $00
   statusbarcolor = $00
+  
+  rem nuke all the upper bits of this var we use for saucer stuff
+  inBox = inBox & %00001111
 
   rem CUT ALL THIS STUFF FOR THE BONUS MARKER
   rem we use lives to show what round we are on up to 6, then we loop  
@@ -462,6 +461,10 @@ __endRound
   score = score + 15
   if round > 9 then score = score + 10
   if round > 14 then score = score + 10
+  rem testing if we should summon the saucer
+  if boxed{3} && boxed{2} && !inBox{6} then inBox{6} = 1 : player5y = 30
+  if boxed{1} && boxed{4} && !inBox{6} then inBox{6} = 1 : player5y = 80
+  
   if temp2 = 1 && temp3 = 1 then round = round +1 : t = 0 : goto roundScore
   return
 
@@ -480,16 +483,16 @@ subGrab
     if round = 2 && player0y > 50 then carrying = 1 : goto __endGrab
     if round = 2 && player0y < 50 then carrying = 2 : goto __endGrab
 
-    if player0y > 50 && boxed{1} then carrying = 4 : goto __endGrab
-    if player0y > 50 && boxed{4} then carrying = 1 : goto __endGrab
+    if player0y > 50 && boxed{1} && !boxed{4} then carrying = 4 : goto __endGrab
+    if player0y > 50 && boxed{4} && !boxed{1} then carrying = 1 : goto __endGrab
 
-    if player0y < 50 && boxed{3} then carrying = 2 : goto __endGrab
-    if player0y < 50 && boxed{2} then carrying = 3 : goto __endGrab
+    if player0y < 50 && boxed{3} && !boxed{2} then carrying = 2 : goto __endGrab
+    if player0y < 50 && boxed{2} && !boxed{3} then carrying = 3 : goto __endGrab
 
-    if player0x > 90 && player0y > 50 then carrying = 1
-    if player0x > 90 && player0y < 50 then carrying = 3
-    if player0x < 70 && player0y < 50 then carrying = 2
-    if player0x < 60 && player0y > 50 then carrying = 4
+    if player0x > 90 && player0y > 50 && !boxed{1} then carrying = 1
+    if player0x > 90 && player0y < 50 && !boxed{2} then carrying = 3
+    if player0x < 70 && player0y < 50 && !boxed{3} then carrying = 2
+    if player0x < 60 && player0y > 50 && !boxed{4} then carrying = 4
 __endGrab
     return
 
@@ -517,7 +520,7 @@ __skipUpdate4
 
     if ballTimer = 0 && round > 3 then gosub ball_limitcheck
 
-    rem gosub player5_draw
+    gosub player5_draw
 
     return
 
@@ -778,10 +781,31 @@ __High_Flip
   
   rem moving some logic into the vblank time because there is a small amount of it leftover and we need all we can get
   vblank
+  
+  if player0Timer > 0 then player0Timer = player0Timer - 1 : goto __skipPlayerInput   
+  if joy0right then player0x=player0x+1 : REFP0 = 0
+  if joy0left then player0x=player0x-1 : REFP0 = 8
+  if joy0up then player0y=player0y+1
+  if joy0down then player0y=player0y-1  
+__skipPlayerInput
+   
   if player0y = 86 then player0y = 85
   if player0y = 13 then player0y = 14
   if player0x = 133 then player0x = 132
   if player0x = 19 then player0x = 20 
+
+  if !inBox{6} || inBox{7} then goto __SkipSaucer
+  rem if we are ready for the saucer randomly choose if it appears
+  temp5 = rand : if temp5 < 64 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
+ 
+  rem saucer either are on the right or left side of the field.
+  temp6 = 120
+  if temp5 > 218 then temp6 = 35
+  player5x = temp6
+  
+  inBox{7} = 1
+  
+__SkipSaucer
   
   rem Keep the kittens from moving every single frame 
   rem Set a temp var for the speed of the kittens. Used to be kittenSpeed but this saves a var
