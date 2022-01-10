@@ -193,17 +193,17 @@ pauseloop
   rem COLOR TOWN!
   rem %%%%%%%%%%%%%%%%%%%
   rem player color changes when carrying a kitten
-  if carrying = 0 then COLUP0= $00 else COLUP0= $04 
+  if carrying = 0 then COLUP0= $00 else COLUP0= $0A 
 
   rem in multisprite kernel we use this to change the color of player 1
-  _COLUP1=$1E
+  _COLUP1=$2C
 
   rem other sprites colors are set in their update function
 
   rem Background Color
-  COLUBK=$C8
+  COLUBK=$58
   rem Playfield Foreground Color - also deteremines the ball sprite color
-  COLUPF=$F2
+  COLUPF=$26
   
   if round = 99 then gosub __Check_High_Score
 
@@ -464,7 +464,7 @@ __endRound
 
   rem when we finish a round, give the player 5 points for every "block" of 10 they had left on the timer.
 roundScore
-  COLUPF = $F2
+  COLUPF = $26
   t=t+1
   if t < 4 then drawscreen : goto roundScore
   if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
@@ -561,7 +561,7 @@ _skipP1PosY
 
 player2_limitcheck
 
-  COLUP2=98
+  COLUP2=$C6
   NUSIZ2=$10
 
  player2:
@@ -643,7 +643,7 @@ _skipP3PosY
  
 player4_limitcheck
 
-  COLUP4=192
+  COLUP4=$32
   NUSIZ4=$10
 
  player4:

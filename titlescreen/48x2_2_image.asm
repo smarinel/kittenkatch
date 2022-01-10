@@ -25,24 +25,24 @@ bmp_48x2_2_colors
    .byte $6C
    .byte $6E
    .byte $0E
-   .byte $78
-   .byte $7A
+   .byte $68
+   .byte $6A
    .byte $6C
    .byte $6E
    .byte $0E
    .byte $0E
    .byte $0E
    .byte $C2
-   .byte $C2
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
-   .byte $C4
+   .byte $50
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
+   .byte $52
    .byte $C2
    .byte $C2
    .byte $C2
@@ -50,16 +50,16 @@ bmp_48x2_2_colors
    .byte $98
    .byte $98
    .byte $98
-   .byte $76
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $78
+   .byte $C4
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
+   .byte $C8
    .byte $78
    .byte $98
    .byte $98
@@ -81,16 +81,16 @@ bmp_48x2_2_colors
    .byte $1E
    .byte $1E
    .byte $0E
-   .byte $1C
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
-   .byte $1E
+   .byte $28
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
+   .byte $2E
    .byte $0E
    .byte $68
    .byte $6A

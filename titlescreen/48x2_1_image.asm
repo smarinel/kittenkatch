@@ -16,55 +16,55 @@ bmp_48x2_1_height = 50
 
  ;*** The color of each line in the bitmap, in reverse order...
 bmp_48x2_1_colors 
-   .byte $36
-   .byte $44
+   .byte $D8
+   .byte $84
    .byte $6A
-   .byte $36
+   .byte $D8
    .byte $8A
-   .byte $36
+   .byte $D8
    .byte $8A
-   .byte $44
-   .byte $36
+   .byte $84
+   .byte $D8
    .byte $8A
-   .byte $36
-   .byte $2A
-   .byte $36
-   .byte $6A
-   .byte $5A
-   .byte $36
-   .byte $06
-   .byte $06
-   .byte $04
-   .byte $04
-   .byte $06
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $04
-   .byte $06
-   .byte $78
-   .byte $78
-   .byte $78
-   .byte $7A
-   .byte $7C
-   .byte $7E
-   .byte $C2
-   .byte $66
-   .byte $68
-   .byte $6A
-   .byte $6C
+   .byte $C6
    .byte $6E
+   .byte $C6
+   .byte $6A
+   .byte $D6
+   .byte $6C
+   .byte $08
+   .byte $08
+   .byte $0C
+   .byte $0C
+   .byte $06
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $0C
+   .byte $06
+   .byte $78
+   .byte $D6
+   .byte $D8
+   .byte $DA
+   .byte $DC
+   .byte $DE
+   .byte $C2
+   .byte $A6
+   .byte $A8
+   .byte $AA
+   .byte $AC
+   .byte $AE
    .byte $0E
 
 
