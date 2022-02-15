@@ -10,6 +10,8 @@
    includesfile multisprite_bankswitch.inc
    set kernel multisprite
    set romsize 8k
+   set optimization inlinerand
+   set optimization size
 
   dim  player1Dir=a
   dim  player2Dir=b
@@ -27,7 +29,8 @@
   dim  carrying=o
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
   rem inBox{3} is for setting which is the startng round 1 kitten
-  rem inBox{6} is used for knowing if we have actived the top saucer
+  rem inbox{5} is used to update the ball every OTHER frame RIP ballTimer we loved you
+  rem inBox{6} is used for knowing if we have activated the top saucer
   rem inBox{7} is used to know we have handled the saucer getting started
   dim  inBox=p
   dim  player1Timer=q
@@ -35,7 +38,7 @@
   dim  timer = t
   dim  player3Timer=v  
   dim  player4Timer=u
-  dim  ballTimer = w
+  dim  rand16 = w
   dim  statusbarcolor = y
   dim  bmp_48x2_2_index=z
 
@@ -108,27 +111,18 @@
   const SW = 30
   const NW = 40
 
-  _High_Score1 = 0
-  _High_Score2 = 0
-  _High_Score3 = 0
+  _High_Score1 = 0 : _High_Score2 = 0 : _High_Score3 = 0 : _Score1_Mem = 0 : _Score2_Mem = 0 :  _Score3_Mem = 0
 
-  _Score1_Mem = 0
-  _Score2_Mem = 0
-  _Score3_Mem = 0
-
-  timerlo = 0
 __start
 
+  timerlo = 0
    ;***************************************************************
    ;
    ;  Clears all normal variables (faster way).
    ;
-   d = 0 : e = 0 : f = 0  : h = 0 : i = 0
-   j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
-   t = 0 : u = 0 : v = 0 : w = 0 : y = 0 : z = 0 : temp5 = 0
+   d = 0 : e = 0 : f = 0  : h = 0 : i = 0 : j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0 : t = 0 : u = 0 : v = 0 : w = 0 : y = 0 : z = 0 : temp5 = 0
 
-  round = 1
-  ballSpeed = 2
+  round = 1 : ballSpeed = 2
 
   AUDV0=0
  
@@ -143,22 +137,22 @@ titlepage
   
   
   rem I know this looks crazy, but it was the only way I could get some sort of title song playing. 
-  rem using ballTimer here since it gets cleanly setup with good values in the setupRound routine.
+  rem using player1Timer here since it gets cleanly setup with good values in the setupRound routine.
   
   rem change the smaller menu graphic every round of music - putting it first to reduce if checks in this case
-  if sfxplaying = 0 && ballTimer = 6 then ballTimer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16 : gosub __High_Flip
+  if sfxplaying = 0 && player1Timer = 6 then player1Timer = 0 : bmp_48x2_2_index = bmp_48x2_2_index + 16 : gosub __High_Flip
   if bmp_48x2_2_index = 80 then bmp_48x2_2_index = 0 : goto __cont_menu
 
-  if sfxplaying = 0 && ballTimer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 : goto __cont_menu
-  if sfxplaying = 0 && ballTimer = 1 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 16 : AUDV0 = 5 : goto __cont_menu
-  if sfxplaying = 0 && ballTimer = 2 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 31 : AUDV0 = 5 : goto __cont_menu
-  if sfxplaying = 0 && ballTimer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
-  if sfxplaying = 0 && ballTimer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 : goto __cont_menu
-  if sfxplaying = 0 && ballTimer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 0 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 =16 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 1 then sfxplaying = 1 : AUDC0 = 12 : AUDF0 = 16 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 2 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 31 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 3 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 4 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 19 : AUDV0 = 5 : goto __cont_menu
+  if sfxplaying = 0 && player1Timer = 5 then sfxplaying = 1 : AUDC0 = 4 : AUDF0 = 24 : AUDV0 = 5 : goto __cont_menu
 
 __cont_menu
   if sfxplaying = 1 then sfxtimer = sfxtimer + 1
-  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : ballTimer = ballTimer + 1 
+  if sfxtimer = 30 then sfxplaying = 0 : sfxtimer = 0 : AUDV0 = 0 : player1Timer = player1Timer + 1 
   
   if timer < 30 then timer = timer + 1
 
@@ -170,12 +164,12 @@ __cont_menu
 
 
 gamestart
-  rem Set values that need to be applied every round
-  gosub setupRound
-  lives = 0   
   
   rem reset the score
-  score = 0
+  score = 0 : lives = 0   
+  
+  rem Set values that need to be applied every round
+  gosub setupRound
 
 main
 
@@ -294,7 +288,7 @@ end
   temp5 = 0
   if boxed{2} && boxed{3} && player0y < 50 then temp5 = 1
   if boxed{1} && boxed{4} && player0y > 50 then temp5 = 1
-  if collision(player0, player1) && temp5=1 && carrying = 0 then player0Timer = 30 : score = score + 25 : player5x = 0 : player5y = 0 : sfxplaying = 1 : AUDC0 = 2 : AUDF0 = 10 : AUDV0 = 10
+  if collision(player0, player1) && temp5=1 && carrying = 0 then player0Timer = 10 : scoreAmount = scoreAmount + 20 : score = score + 25 : timerlo = timerlo - _timerRate : player5x = 0 : player5y = 0 : sfxplaying = 1 : AUDC0 = 3 : AUDF0 = 3 : AUDV0 = 10 : statusbarcolor = $0E
   rem Hitting Kittens
   if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then gosub subGrab
   rem if collision(player0,player1) && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
@@ -306,9 +300,13 @@ end
   timer = timer + 1  
   if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1 
   if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
-  if scoreAmount < 20 && sfxplaying = 0 then sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
+  if scoreAmount < 20 && sfxplaying = 0 then statusbarcolor = statusbarcolor + 1 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
   if scoreAmount = 0 then round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
   statusbarlength = scoreAmount
+
+  rem ok so this checks y values, we check x in bank 2. This is dumb, but bytes.
+  if player0y = 86 then player0y = 85
+  if player0y = 13 then player0y = 14
 
   gosub updateKittens
 
@@ -346,15 +344,13 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
-  player5x=0
-  player5y=0
+  player5x=0 : player5y=0
 
   if round = 1 && inBox{3}  then player1x=0 : player1y=0
   if round = 1 && !inBox{3} then player2x=0 : player2y=0
 
-  scorecolor = $00
-  statusbarcolor = $00
-  
+  scorecolor = $00 : statusbarcolor = $00
+
   rem nuke all the upper bits of this var we use for saucer stuff
   inBox = inBox & %00001111
 
@@ -402,13 +398,7 @@ _skipInitExtras
   player4Dir=NE
   ballDir=SE
 
-  carrying = 0
-  boxed = 0
-
-  timer = 0
-  AUDV0 = 0
-
-  bmp_48x2_2_index = 0
+  carrying = 0 : boxed = 0 : timer = 0 : AUDV0 = 0 : bmp_48x2_2_index = 0
 
   timerlo = timerlo + _timerRate
   if timerlo < _baseTime  then scoreAmount = _baseTime - timerlo : goto __protectScoreAmount
@@ -419,7 +409,7 @@ __protectScoreAmount
   player2Timer = 2
   player3Timer = 3
   player4Timer = 4
-  ballTimer = 5
+  rem ballTimer = 5
   return
 
 ballStunPlayer
@@ -467,7 +457,7 @@ roundScore
   COLUPF = $F2
   t=t+1
   if t < 4 then drawscreen : goto roundScore
-  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
+  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 15 : statusbarlength = scoreAmount : drawscreen : goto roundScore
   gosub setupRound
   return
 
@@ -513,7 +503,7 @@ __skipUpdate3
     if carrying > 4 || carrying < 4 then gosub player4_limitcheck
 __skipUpdate4
 
-    if ballTimer = 0 && round > 3 then gosub ball_limitcheck
+    if inBox{5} && round > 3 then gosub ball_limitcheck
 
     gosub player5_draw
 
@@ -784,19 +774,17 @@ __High_Flip
   if joy0up then player0y=player0y+1
   if joy0down then player0y=player0y-1  
 __skipPlayerInput
-   
-  if player0y = 86 then player0y = 85
-  if player0y = 13 then player0y = 14
+
   if player0x = 133 then player0x = 132
   if player0x = 19 then player0x = 20 
 
   if !inBox{6} || inBox{7} then goto __SkipSaucer
   rem if we are ready for the saucer randomly choose if it appears
-  temp5 = rand : if temp5 < 192 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
+  temp5 = rand : if temp5 < 154 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
  
   rem saucer either are on the right or left side of the field.
   temp6 = 130
-  if temp5 > 218 then temp6 = 35
+  if temp5 > 192 then temp6 = 35
   player5x = temp6
   
   inBox{7} = 1
@@ -813,9 +801,11 @@ __SkipSaucer
   if player2Timer > 0 && !boxed{2} then player2Timer = player2Timer - 1 else player2Timer = currentSpeed
   if player3Timer > 0 && !boxed{3} then player3Timer = player3Timer - 1 else player3Timer = currentSpeed
   if player4Timer > 0 && !boxed{4} then player4Timer = player4Timer - 1 else player4Timer = currentSpeed
-  if ballTimer > 0 then ballTimer = ballTimer - 1 else ballTimer = _maxKittenSpeed
-  return 
+  
+  inBox{5} = !inBox{5}
 
+  return 
+  
  inline 6lives_statusbar.asm
 
  asm
