@@ -30,7 +30,7 @@
   rem inBox{1} = if player is in box, inBox{2} is if the player has released the fire button since delivering a kitten
   rem inBox{3} is for setting which is the startng round 1 kitten
   rem inbox{5} is used to update the ball every OTHER frame RIP ballTimer we loved you
-  rem inBox{6} is used for knowing if we have actived the top saucer
+  rem inBox{6} is used for knowing if we have activated the top saucer
   rem inBox{7} is used to know we have handled the saucer getting started
   dim  inBox=p
   dim  player1Timer=q
@@ -111,15 +111,11 @@
   const SW = 30
   const NW = 40
 
-  _High_Score1 = 0
-  _High_Score2 = 0
-  _High_Score3 = 0
+  _High_Score1 = 0 : _High_Score2 = 0 : _High_Score3 = 0 : _Score1_Mem = 0 : _Score2_Mem = 0 :  _Score3_Mem = 0
 
-  _Score1_Mem = 0 : _Score2_Mem = 0 :  _Score3_Mem = 0
-
-  timerlo = 0
 __start
 
+  timerlo = 0
    ;***************************************************************
    ;
    ;  Clears all normal variables (faster way).
@@ -170,8 +166,7 @@ __cont_menu
 gamestart
   
   rem reset the score
-  score = 0
-  lives = 0   
+  score = 0 : lives = 0   
   
   rem Set values that need to be applied every round
   gosub setupRound
@@ -293,7 +288,7 @@ end
   temp5 = 0
   if boxed{2} && boxed{3} && player0y < 50 then temp5 = 1
   if boxed{1} && boxed{4} && player0y > 50 then temp5 = 1
-  if collision(player0, player1) && temp5=1 && carrying = 0 then player0Timer = 30 : score = score + 25 : player5x = 0 : player5y = 0 : sfxplaying = 1 : AUDC0 = 2 : AUDF0 = 10 : AUDV0 = 10
+  if collision(player0, player1) && temp5=1 && carrying = 0 then player0Timer = 10 : scoreAmount = scoreAmount + 20 : score = score + 25 : timerlo = timerlo - _timerRate : player5x = 0 : player5y = 0 : sfxplaying = 1 : AUDC0 = 3 : AUDF0 = 3 : AUDV0 = 10 : statusbarcolor = $0E
   rem Hitting Kittens
   if collision(player0,player1) && joy0fire && carrying = 0 && !inBox{1} && !inBox{2} then gosub subGrab
   rem if collision(player0,player1) && carrying = 0 && !inBox{1} && !inBox{2} then AUDV0 = 0 : gosub subGrab
@@ -305,7 +300,7 @@ end
   timer = timer + 1  
   if timer=_timerRate && scoreAmount > 0 then timer = 0 : scoreAmount = scoreAmount - 1 
   if scoreAmount < 40 then statusbarcolor = statusbarcolor + 1
-  if scoreAmount < 20 && sfxplaying = 0 then sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
+  if scoreAmount < 20 && sfxplaying = 0 then statusbarcolor = statusbarcolor + 1 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = timer + 10 : AUDV0 = 1
   if scoreAmount = 0 then round = 99 : timer = 0 : sfxplaying = 1 : AUDC0 = 7 : AUDF0 = 20 : AUDV0 = 5: goto pauseloop
   statusbarlength = scoreAmount
 
@@ -349,8 +344,7 @@ setupRound
   player0y=25
   player1y=65
   player2y=25
-  player5x=0
-  player5y=0
+  player5x=0 : player5y=0
 
   if round = 1 && inBox{3}  then player1x=0 : player1y=0
   if round = 1 && !inBox{3} then player2x=0 : player2y=0
@@ -404,10 +398,7 @@ _skipInitExtras
   player4Dir=NE
   ballDir=SE
 
-  carrying = 0 : boxed = 0 : timer = 0
-  AUDV0 = 0
-
-  bmp_48x2_2_index = 0
+  carrying = 0 : boxed = 0 : timer = 0 : AUDV0 = 0 : bmp_48x2_2_index = 0
 
   timerlo = timerlo + _timerRate
   if timerlo < _baseTime  then scoreAmount = _baseTime - timerlo : goto __protectScoreAmount
@@ -466,7 +457,7 @@ roundScore
   COLUPF = $F2
   t=t+1
   if t < 4 then drawscreen : goto roundScore
-  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 5 : statusbarlength = scoreAmount : drawscreen : goto roundScore
+  if scoreAmount > 9 then scoreAmount = scoreAmount - 10 : score = score + 15 : statusbarlength = scoreAmount : drawscreen : goto roundScore
   gosub setupRound
   return
 
@@ -789,11 +780,11 @@ __skipPlayerInput
 
   if !inBox{6} || inBox{7} then goto __SkipSaucer
   rem if we are ready for the saucer randomly choose if it appears
-  temp5 = rand : if temp5 < 192 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
+  temp5 = rand : if temp5 < 154 then player5y = 0 : inBox{7} = 1 : goto __SkipSaucer
  
   rem saucer either are on the right or left side of the field.
   temp6 = 130
-  if temp5 > 218 then temp6 = 35
+  if temp5 > 192 then temp6 = 35
   player5x = temp6
   
   inBox{7} = 1
